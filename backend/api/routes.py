@@ -108,13 +108,13 @@ async def whale_alerts_endpoint(limit: int = 20):
 # ─── Cross-Chain Analysis ───
 
 @router.get("/cross-chain/summary")
-async def cross_chain_summary():
-    return await bridge_analytics.compute_cross_chain_summary()
+async def cross_chain_summary(days: int = 3):
+    return await bridge_analytics.compute_cross_chain_summary(days=days)
 
 
 @router.get("/cross-chain/bridgers-buyers")
-async def cross_chain_bridgers_buyers():
-    return await bridge_analytics.compute_bridgers_buyers()
+async def cross_chain_bridgers_buyers(days: int = 3):
+    return await bridge_analytics.compute_bridgers_buyers(days=days)
 
 
 # ─── Transfer Heatmap ───

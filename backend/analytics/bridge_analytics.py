@@ -234,19 +234,27 @@ async def compute_timeseries_hourly(hours: int = 168) -> list[dict]:
         await db.close()
 
 
-async def compute_cross_chain_summary() -> dict:
-    """Summary of bridgers vs NOXA buyers overlap."""
+async def compute_cross_chain_summary(days: int = 3) -> dict:
+    """Summary of bridgers vs NOXA buyers overlap, filtered to recent bridgers only.
+
+    Args:
+        days: Only count bridgers from the last N days (default 3).
+    """
     db = await get_db()
     try:
-        # Unique bridge depositor addresses
+        now_ts = int(datetime.utcnow().timestamp())
+        cutoff = now_ts - days * 86400
+
+        # Unique RECENT bridge depositor addresses (last N days)
         cursor = await db.execute(
-            "SELECT DISTINCT LOWER(from_address) AS addr FROM bridge_txs"
+            "SELECT DISTINCT LOWER(from_address) AS addr FROM bridge_txs WHERE timestamp >= ?",
+            (cutoff,),
         )
         bridger_rows = await cursor.fetchall()
         bridgers = {r["addr"] for r in bridger_rows}
         await cursor.close()
 
-        # Unique NOXA buyers (to_address in token_transfers)
+        # Unique NOXA buyers (to_address in token_transfers) — all time
         cursor = await db.execute(
             "SELECT DISTINCT LOWER(to_address) AS addr FROM token_transfers"
         )
@@ -256,10 +264,11 @@ async def compute_cross_chain_summary() -> dict:
 
         overlap = bridgers & buyers
 
-        # ETH bridged per address — use CAST(value AS REAL) to avoid integer overflow on wei sums
+        # ETH bridged per address — recent only, CAST AS REAL for overflow safety
         cursor = await db.execute(
             "SELECT LOWER(from_address) AS addr, SUM(CAST(value AS REAL)) AS total_wei "
-            "FROM bridge_txs GROUP BY LOWER(from_address)"
+            "FROM bridge_txs WHERE timestamp >= ? GROUP BY LOWER(from_address)",
+            (cutoff,),
         )
         eth_by_addr = {}
         for r in await cursor.fetchall():
@@ -271,6 +280,7 @@ async def compute_cross_chain_summary() -> dict:
         non_buyer_eth = [eth_by_addr.get(a, 0) for a in non_buyer_addrs]
 
         return {
+            "window_days": days,
             "total_bridgers": len(bridgers),
             "total_noxa_holders": len(buyers),
             "overlap_count": len(overlap),
@@ -282,20 +292,28 @@ async def compute_cross_chain_summary() -> dict:
         await db.close()
 
 
-async def compute_bridgers_buyers() -> dict:
-    """Addresses that BOTH bridged ETH AND bought NOXA, with per-address detail."""
+async def compute_bridgers_buyers(days: int = 3) -> dict:
+    """Addresses that BOTH bridged ETH (recent) AND bought NOXA (all-time), with per-address detail.
+
+    Args:
+        days: Only count bridgers from the last N days (default 3).
+    """
     db = await get_db()
     try:
+        now_ts = int(datetime.utcnow().timestamp())
+        cutoff = now_ts - days * 86400
+
         # Get NOXA price from KV
         price_str = await get_kv(db, "noxa_price")
         noxa_price = float(price_str) if price_str else 0.0
 
-        # ETH bridged per address — use CAST(value AS REAL) to avoid integer overflow
+        # ETH bridged per address — recent only, CAST AS REAL for overflow safety
         cursor = await db.execute(
             "SELECT LOWER(from_address) AS addr, "
             "SUM(CAST(value AS REAL)) AS total_wei, "
             "COUNT(*) AS tx_count "
-            "FROM bridge_txs GROUP BY LOWER(from_address)"
+            "FROM bridge_txs WHERE timestamp >= ? GROUP BY LOWER(from_address)",
+            (cutoff,),
         )
         bridge_data = {}
         for r in await cursor.fetchall():
