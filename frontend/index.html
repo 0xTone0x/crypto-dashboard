@@ -52,6 +52,8 @@
         <div class="flex gap-2 mb-6">
             <button id="tab-token" onclick="switchTab('token')" class="tab-active px-5 py-2.5 rounded-lg font-medium text-sm transition-colors">📊 Token Analytics</button>
             <button id="tab-bridge" onclick="switchTab('bridge')" class="tab-inactive px-5 py-2.5 rounded-lg font-medium text-sm transition-colors">🌉 Bridge Tracker</button>
+            <button id="tab-crosschain" onclick="switchTab('crosschain')" class="tab-inactive px-5 py-2.5 rounded-lg font-medium text-sm transition-colors">🔗 Cross-Chain</button>
+            <button id="tab-whale" onclick="switchTab('whale')" class="tab-inactive px-5 py-2.5 rounded-lg font-medium text-sm transition-colors">🐋 Whale & Activity</button>
         </div>
     </div>
 
@@ -147,25 +149,46 @@
         </div>
 
         <!-- Velocity row -->
-        <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="grid grid-cols-3 md:grid-cols-5 gap-4 mb-6">
             <div class="card p-4 text-center">
-                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">24h Volume</p>
-                <p class="text-xl font-bold text-blue-400 num-mono" id="b-24h">—</p>
+                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">1h Velocity</p>
+                <p class="text-xl font-bold text-cyan-400 num-mono" id="b-vel-1h">—</p>
+                <p class="text-xs text-slate-500 mt-1"><span id="b-txs-1h">0</span> txs</p>
             </div>
             <div class="card p-4 text-center">
-                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">7d Volume</p>
-                <p class="text-xl font-bold text-brand-400 num-mono" id="b-7d">—</p>
+                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">6h Velocity</p>
+                <p class="text-xl font-bold text-cyan-300 num-mono" id="b-vel-6h">—</p>
+                <p class="text-xs text-slate-500 mt-1"><span id="b-txs-6h">0</span> txs</p>
+            </div>
+            <div class="card p-4 text-center">
+                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">12h Velocity</p>
+                <p class="text-xl font-bold text-blue-400 num-mono" id="b-vel-12h">—</p>
+                <p class="text-xs text-slate-500 mt-1"><span id="b-txs-12h">0</span> txs</p>
+            </div>
+            <div class="card p-4 text-center">
+                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">24h Volume</p>
+                <p class="text-xl font-bold text-blue-300 num-mono" id="b-24h">—</p>
+                <p class="text-xs text-slate-500 mt-1"><span id="b-txs-24h">0</span> txs</p>
             </div>
             <div class="card p-4 text-center">
                 <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">7d Velocity</p>
-                <p class="text-xl font-bold text-purple-400 num-mono" id="b-vel">—</p>
+                <p class="text-xl font-bold text-purple-400 num-mono" id="b-vel-7d">—</p>
+                <p class="text-xs text-slate-500 mt-1"><span id="b-txs-7d">0</span> txs</p>
             </div>
         </div>
 
         <!-- Charts -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <div class="card p-6">
-                <h3 class="text-lg font-semibold mb-4">Daily Bridge Volume</h3>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">Bridge Volume</h3>
+                    <div class="flex gap-1">
+                        <button onclick="setChartResolution('1H', 24)" id="res-1H" class="px-2 py-1 rounded text-xs font-medium bg-slate-700 text-slate-300 hover:bg-slate-600">1H</button>
+                        <button onclick="setChartResolution('6H', 168)" id="res-6H" class="px-2 py-1 rounded text-xs font-medium bg-brand-600 text-white">6H</button>
+                        <button onclick="setChartResolution('1D', 720)" id="res-1D" class="px-2 py-1 rounded text-xs font-medium bg-slate-700 text-slate-300 hover:bg-slate-600">1D</button>
+                        <button onclick="setChartResolution('1W', 168)" id="res-1W" class="px-2 py-1 rounded text-xs font-medium bg-slate-700 text-slate-300 hover:bg-slate-600">1W</button>
+                    </div>
+                </div>
                 <div class="relative h-64">
                     <canvas id="bridge-bar"></canvas>
                 </div>
@@ -211,6 +234,160 @@
         </div>
     </div>
 
+    <!-- Cross-Chain Tab -->
+    <div id="crosschain-tab" class="max-w-7xl mx-auto px-4 pb-8 hidden">
+        <!-- Summary Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+            <div class="card p-5 glow">
+                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">Total Bridgers</p>
+                <p class="text-3xl font-bold num-mono text-blue-400" id="cc-total-bridgers">—</p>
+            </div>
+            <div class="card p-5">
+                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">NOXA Buyers</p>
+                <p class="text-3xl font-bold num-mono text-green-400" id="cc-total-buyers">—</p>
+            </div>
+            <div class="card p-5">
+                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">Overlap</p>
+                <p class="text-3xl font-bold num-mono text-purple-400" id="cc-overlap">—</p>
+            </div>
+            <div class="card p-5">
+                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">Conversion Rate</p>
+                <p class="text-3xl font-bold num-mono text-yellow-400" id="cc-conv-rate">—</p>
+            </div>
+            <div class="card p-5">
+                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">Avg ETH (Buyers)</p>
+                <p class="text-2xl font-bold num-mono text-cyan-400" id="cc-avg-buyers">—</p>
+                <p class="text-xs text-slate-500 mt-1">vs <span id="cc-avg-non">—</span> non-buyers</p>
+            </div>
+        </div>
+
+        <!-- Conversion Funnel -->
+        <div class="card p-6 mb-6">
+            <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                <span class="text-2xl">🔄</span> Conversion Funnel: Bridge Depositors → NOXA Buyers
+            </h3>
+            <div class="space-y-4">
+                <!-- Funnel bars -->
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-sm text-slate-300">🌉 Bridge Depositors</span>
+                        <span class="text-sm num-mono text-blue-400 font-bold" id="funnel-bridgers">—</span>
+                    </div>
+                    <div class="h-8 rounded-lg bg-blue-900/30 border border-blue-800 overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-lg flex items-center justify-end pr-3" style="width:100%">
+                            <span class="text-xs text-white font-medium">100%</span>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-sm text-slate-300">🔗 Also Bought NOXA</span>
+                        <span class="text-sm num-mono text-purple-400 font-bold" id="funnel-overlap">—</span>
+                    </div>
+                    <div class="h-8 rounded-lg bg-purple-900/30 border border-purple-800 overflow-hidden">
+                        <div id="funnel-overlap-bar" class="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-lg flex items-center justify-end pr-3" style="width:0%">
+                            <span class="text-xs text-white font-medium" id="funnel-overlap-pct">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <p class="text-xs text-slate-500 mt-4">Tracks how many addresses that bridged ETH to the L1 bridge contract also appear as a receiver (buyer) in NOXA token transfers.</p>
+        </div>
+
+        <!-- Bridgers × Buyers Table -->
+        <div class="card p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold flex items-center gap-2">
+                    <span class="text-2xl">🎯</span> Bridgers Who Also Bought NOXA
+                </h3>
+                <span class="text-xs text-slate-500" id="cc-match-count">Loading...</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-slate-400 text-xs uppercase border-b border-slate-800">
+                            <th class="text-left py-3 px-2">#</th>
+                            <th class="text-left py-3 px-2">Address</th>
+                            <th class="text-right py-3 px-2">ETH Bridged</th>
+                            <th class="text-right py-3 px-2">NOXA Bought</th>
+                            <th class="text-right py-3 px-2">Bridge TXs</th>
+                            <th class="text-right py-3 px-2">NOXA TXs</th>
+                            <th class="text-right py-3 px-2">NOXA / ETH %</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cc-matches-tbody">
+                        <tr><td colspan="7" class="text-center py-8 text-slate-500">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Whale & Activity Tab -->
+    <div id="whale-tab" class="max-w-7xl mx-auto px-4 pb-8 hidden">
+        <!-- Whale Alerts Feed -->
+        <div class="card p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold flex items-center gap-2">
+                    <span class="text-2xl">🐋</span> Whale Alerts
+                </h3>
+                <span class="text-xs text-slate-500" id="whale-count">Loading...</span>
+            </div>
+            <div id="whale-feed" class="space-y-2 max-h-96 overflow-y-auto">
+                <p class="text-center text-slate-500 py-4">Loading whale movements...</p>
+            </div>
+        </div>
+
+        <!-- Transfer Heatmap -->
+        <div class="card p-6 mb-6">
+            <h3 class="text-lg font-semibold mb-1 flex items-center gap-2">
+                <span class="text-2xl">🔥</span> Transfer Activity Heatmap
+            </h3>
+            <p class="text-xs text-slate-500 mb-4">Transfer counts by day of week × hour of day (UTC)</p>
+            <div id="heatmap-container" class="overflow-x-auto">
+                <p class="text-center text-slate-500 py-4">Loading heatmap...</p>
+            </div>
+        </div>
+
+        <!-- Concentration Trend -->
+        <div class="card p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold flex items-center gap-2">
+                    <span class="text-2xl">📊</span> Holder Concentration Over Time
+                </h3>
+                <div class="flex items-center gap-3">
+                    <span class="text-xs text-slate-500">Trend:</span>
+                    <span id="concentration-trend" class="px-2 py-1 rounded text-xs font-medium bg-slate-700 text-slate-300">—</span>
+                </div>
+            </div>
+            <div class="relative h-72">
+                <canvas id="concentration-chart"></canvas>
+            </div>
+        </div>
+
+        <!-- Top Transfer Corridors -->
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                <span class="text-2xl">🔗</span> Top Transfer Corridors
+            </h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-slate-400 text-xs uppercase border-b border-slate-800">
+                            <th class="text-left py-2 px-2">#</th>
+                            <th class="text-left py-2 px-2">From → To</th>
+                            <th class="text-right py-2 px-2">Transfers</th>
+                            <th class="text-right py-2 px-2">Volume</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corridors-tbody">
+                        <tr><td colspan="4" class="text-center py-6 text-slate-500">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <footer class="text-center py-6 text-slate-600 text-xs">
         NOXA Analytics · DBK Chain · <span id="last-update">—</span>
     </footer>
@@ -218,14 +395,22 @@
 <script>
 const API = '';
 let distChart, costChart, bridgeBarChart;
+let concentrationChart;
+let bridgeChartResolution = '6H';  // default resolution
 
 // ─── Tab switching ───
 function switchTab(tab) {
     document.getElementById('token-tab').classList.toggle('hidden', tab !== 'token');
     document.getElementById('bridge-tab').classList.toggle('hidden', tab !== 'bridge');
+    document.getElementById('crosschain-tab').classList.toggle('hidden', tab !== 'crosschain');
+    document.getElementById('whale-tab').classList.toggle('hidden', tab !== 'whale');
     document.getElementById('tab-token').className = tab === 'token' ? 'tab-active px-5 py-2.5 rounded-lg font-medium text-sm transition-colors' : 'tab-inactive px-5 py-2.5 rounded-lg font-medium text-sm transition-colors';
     document.getElementById('tab-bridge').className = tab === 'bridge' ? 'tab-active px-5 py-2.5 rounded-lg font-medium text-sm transition-colors' : 'tab-inactive px-5 py-2.5 rounded-lg font-medium text-sm transition-colors';
+    document.getElementById('tab-crosschain').className = tab === 'crosschain' ? 'tab-active px-5 py-2.5 rounded-lg font-medium text-sm transition-colors' : 'tab-inactive px-5 py-2.5 rounded-lg font-medium text-sm transition-colors';
+    document.getElementById('tab-whale').className = tab === 'whale' ? 'tab-active px-5 py-2.5 rounded-lg font-medium text-sm transition-colors' : 'tab-inactive px-5 py-2.5 rounded-lg font-medium text-sm transition-colors';
     if (tab === 'bridge') loadBridge();
+    if (tab === 'crosschain') loadCrossChain();
+    if (tab === 'whale') loadWhaleTab();
 }
 
 // ─── Helpers ───
@@ -339,14 +524,106 @@ async function loadBridge() {
         document.getElementById('b-deposits').textContent = fmt(stats.total_deposits, 0);
         document.getElementById('b-depositors').textContent = fmt(stats.unique_depositors, 0);
         document.getElementById('b-avg').textContent = fmtEth(stats.avg_deposit);
+        // Velocity cards
+        document.getElementById('b-vel-1h').textContent = fmtEth(stats.velocity_1h) + '/h';
+        document.getElementById('b-vel-6h').textContent = fmtEth(stats.velocity_6h) + '/h';
+        document.getElementById('b-vel-12h').textContent = fmtEth(stats.velocity_12h) + '/h';
         document.getElementById('b-24h').textContent = fmtEth(stats.eth_24h);
-        document.getElementById('b-7d').textContent = fmtEth(stats.eth_7d);
-        document.getElementById('b-vel').textContent = fmtEth(stats.velocity_7d_per_day) + '/day';
+        document.getElementById('b-vel-7d').textContent = fmtEth(stats.velocity_7d) + '/h';
+        // Tx counts
+        document.getElementById('b-txs-1h').textContent = stats.txs_1h || 0;
+        document.getElementById('b-txs-6h').textContent = stats.txs_6h || 0;
+        document.getElementById('b-txs-12h').textContent = stats.txs_12h || 0;
+        document.getElementById('b-txs-24h').textContent = stats.txs_24h || 0;
+        document.getElementById('b-txs-7d').textContent = stats.txs_7d || 0;
     }
 
     if (ts && ts.data) renderBridgeBar(ts.data);
     if (dep && dep.depositors) renderDepositors(dep.depositors);
     if (recent && recent.transactions) renderRecent(recent.transactions);
+
+    // Also load hourly data for the chart if current resolution needs it
+    if (bridgeChartResolution !== '1D') {
+        const hoursMap = {'1H': 24, '6H': 168, '1W': 168};
+        const hours = hoursMap[bridgeChartResolution] || 168;
+        const hourlyData = await api(`/api/bridge/timeseries-hourly?hours=${hours}`);
+        if (hourlyData && hourlyData.data) renderBridgeBarHourly(hourlyData.data, bridgeChartResolution);
+    }
+}
+
+function setChartResolution(res, hours) {
+    bridgeChartResolution = res;
+    // Update button styles
+    ['1H', '6H', '1D', '1W'].forEach(r => {
+        const btn = document.getElementById('res-' + r);
+        if (r === res) {
+            btn.className = 'px-2 py-1 rounded text-xs font-medium bg-brand-600 text-white';
+        } else {
+            btn.className = 'px-2 py-1 rounded text-xs font-medium bg-slate-700 text-slate-300 hover:bg-slate-600';
+        }
+    });
+    // Reload chart
+    if (res === '1D') {
+        loadBridgeDailyChart();
+    } else {
+        loadBridgeHourlyChart(hours, res);
+    }
+}
+
+async function loadBridgeDailyChart() {
+    const ts = await api('/api/bridge/timeseries');
+    if (ts && ts.data) renderBridgeBar(ts.data);
+}
+
+async function loadBridgeHourlyChart(hours, res) {
+    const data = await api(`/api/bridge/timeseries-hourly?hours=${hours}`);
+    if (data && data.data) renderBridgeBarHourly(data.data, res);
+}
+
+function renderBridgeBarHourly(data, res) {
+    const ctx = document.getElementById('bridge-bar');
+    if (!ctx) return;
+    // For 6H/1W resolutions, aggregate hourly data into 6-hour buckets
+    let labels, volumes;
+    if (res === '1H') {
+        labels = data.map(d => d.hour.slice(11, 16));  // HH:00
+        volumes = data.map(d => d.volume);
+    } else {
+        // Aggregate into 6h buckets
+        const buckets = {};
+        const bucketOrder = [];
+        data.forEach(d => {
+            const bucketHour = Math.floor(parseInt(d.timestamp) / (6 * 3600)) * (6 * 3600);
+            if (!buckets[bucketHour]) { buckets[bucketHour] = 0; bucketOrder.push(bucketHour); }
+            buckets[bucketHour] += d.volume;
+        });
+        labels = bucketOrder.map(ts => {
+            const dt = new Date(ts * 1000);
+            return dt.toLocaleDateString('en-US', {month:'short', day:'numeric'}) + ' ' + dt.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
+        });
+        volumes = bucketOrder.map(ts => Math.round(buckets[ts] * 10000) / 10000);
+    }
+    if (bridgeBarChart) bridgeBarChart.destroy();
+    bridgeBarChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'ETH Bridged',
+                data: volumes,
+                backgroundColor: '#6366f1',
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { color: '#64748b', font: { size: 9 }, maxTicksLimit: 12 }, grid: { color: '#1e2a3a' } },
+                y: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e2a3a' } },
+            }
+        }
+    });
 }
 
 function renderBridgeBar(data) {
@@ -398,6 +675,259 @@ function renderRecent(txs) {
     </tr>`).join('');
 }
 
+// ─── Cross-Chain Tab ───
+async function loadCrossChain() {
+    const [summary, bridgers] = await Promise.all([
+        api('/api/cross-chain/summary'),
+        api('/api/cross-chain/bridgers-buyers'),
+    ]);
+
+    if (summary) {
+        document.getElementById('cc-total-bridgers').textContent = fmt(summary.total_bridgers, 0);
+        document.getElementById('cc-total-buyers').textContent = fmt(summary.total_noxa_holders, 0);
+        document.getElementById('cc-overlap').textContent = fmt(summary.overlap_count, 0);
+        document.getElementById('cc-conv-rate').textContent = (summary.conversion_rate * 100).toFixed(1) + '%';
+        document.getElementById('cc-avg-buyers').textContent = fmtEth(summary.avg_eth_bridged_by_buyers);
+        document.getElementById('cc-avg-non').textContent = fmtEth(summary.avg_eth_bridged_by_non_buyers) + ' ETH';
+
+        // Funnel
+        document.getElementById('funnel-bridgers').textContent = fmt(summary.total_bridgers, 0);
+        document.getElementById('funnel-overlap').textContent = fmt(summary.overlap_count, 0);
+        const pct = summary.total_bridgers > 0 ? (summary.overlap_count / summary.total_bridgers * 100) : 0;
+        document.getElementById('funnel-overlap-bar').style.width = pct.toFixed(1) + '%';
+        document.getElementById('funnel-overlap-pct').textContent = pct.toFixed(1) + '%';
+    }
+
+    if (bridgers && bridgers.matches) {
+        document.getElementById('cc-match-count').textContent = `${bridgers.match_count} addresses matched`;
+        renderCrossChainMatches(bridgers.matches);
+    }
+}
+
+function renderCrossChainMatches(matches) {
+    const tbody = document.getElementById('cc-matches-tbody');
+    if (!matches.length) { tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-slate-500">No overlapping addresses found</td></tr>'; return; }
+    tbody.innerHTML = matches.map((m, i) => `<tr class="border-b border-slate-800/50 hover:bg-slate-800/30">
+        <td class="py-2 px-2 text-slate-500">${i+1}</td>
+        <td class="py-2 px-2">
+            <a href="https://etherscan.io/address/${m.address}" target="_blank" class="text-blue-400 hover:underline num-mono">${shortAddr(m.address)}</a>
+        </td>
+        <td class="py-2 px-2 text-right num-mono text-green-400">${fmtEth(m.total_eth_bridged)}</td>
+        <td class="py-2 px-2 text-right num-mono text-yellow-400">${fmt(m.total_noxa_bought)}</td>
+        <td class="py-2 px-2 text-right num-mono text-slate-400">${m.bridge_tx_count}</td>
+        <td class="py-2 px-2 text-right num-mono text-slate-400">${m.noxa_transfer_count}</td>
+        <td class="py-2 px-2 text-right num-mono text-purple-400">${m.pct_of_bridged_spent}%</td>
+    </tr>`).join('');
+}
+
+// ─── Whale & Activity Tab ───
+async function loadWhaleTab() {
+    const [whale, heatmap, conc] = await Promise.all([
+        api('/api/whale-alerts?limit=20'),
+        api('/api/token/transfer-heatmap'),
+        api('/api/token/concentration-history'),
+    ]);
+    if (whale && whale.alerts) renderWhaleFeed(whale.alerts);
+    if (heatmap) renderHeatmap(heatmap);
+    if (conc) renderConcentration(conc);
+}
+
+function renderWhaleFeed(alerts) {
+    const feed = document.getElementById('whale-feed');
+    document.getElementById('whale-count').textContent = `${alerts.length} recent whale movements`;
+    if (!alerts.length) { feed.innerHTML = '<p class="text-center text-slate-500 py-4">No whale movements detected</p>'; return; }
+
+    feed.innerHTML = alerts.map(a => {
+        const isBridge = a.type === 'bridge_deposit';
+        const icon = isBridge ? '🌉' : '🐋';
+        const typeLabel = isBridge ? 'Bridge Deposit' : 'Token Transfer';
+        const amountStr = isBridge ? `${a.amount} ETH` : `${fmt(a.amount)} NOXA`;
+        const timeStr = a.timestamp ? new Date(a.timestamp * 1000).toLocaleString('en-US', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+        const pctStr = a.pct_supply ? ` <span class="text-slate-500">(${a.pct_supply}% supply)</span>` : '';
+        const valueStr = a.value_usd > 0 ? `<span class="text-green-400">$${fmt(a.value_usd)}</span>` : '';
+
+        return `<div class="flex items-center gap-3 p-3 rounded-lg bg-[#0f172a] border border-slate-800 hover:border-slate-600 transition-colors">
+            <span class="text-xl">${icon}</span>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-medium text-slate-300">${typeLabel}</span>
+                    <span class="text-xs text-slate-600">${timeStr}</span>
+                </div>
+                <div class="text-sm num-mono truncate">
+                    <a href="https://scan.dbkchain.io/address/${a.address}" target="_blank" class="text-blue-400 hover:underline">${shortAddr(a.address)}</a>
+                    ${a.to_address ? `→ <a href="https://scan.dbkchain.io/address/${a.to_address}" target="_blank" class="text-blue-400 hover:underline">${shortAddr(a.to_address)}</a>` : ''}
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="text-sm font-bold num-mono text-yellow-400">${amountStr}${pctStr}</div>
+                ${valueStr ? `<div class="text-xs num-mono">${valueStr}</div>` : ''}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function renderHeatmap(data) {
+    const container = document.getElementById('heatmap-container');
+    if (!data || !data.full_grid) { container.innerHTML = '<p class="text-center text-slate-500 py-4">No heatmap data</p>'; return; }
+
+    const counts = data.full_grid.counts;
+    const maxCount = data.max_count || 1;
+    const days = data.days;
+    const hours = data.hours;
+
+    // Build HTML table heatmap
+    let html = '<table class="w-full text-xs num-mono" style="border-collapse:separate;border-spacing:2px;">';
+    // Header row with hours
+    html += '<tr><td></td>';
+    for (let h = 0; h < 24; h++) {
+        html += `<td class="text-center text-slate-600" style="min-width:28px;padding:2px;">${h}</td>`;
+    }
+    html += '</tr>';
+
+    for (let d = 0; d < 7; d++) {
+        html += `<tr><td class="text-right text-slate-400 pr-2 font-medium">${days[d]}</td>`;
+        for (let h = 0; h < 24; h++) {
+            const count = counts[d][h];
+            if (count > 0) {
+                const intensity = Math.min(1, count / maxCount);
+                // Color from dark blue to bright cyan/yellow
+                const r = Math.round(99 + intensity * 156);
+                const g = Math.round(102 + intensity * 153);
+                const b = Math.round(241 - intensity * 141);
+                const alpha = 0.2 + intensity * 0.8;
+                const bgColor = `rgba(${r},${g},${b},${alpha})`;
+                html += `<td class="text-center rounded" style="background:${bgColor};padding:4px;color:#fff;font-size:10px;" title="${days[d]} ${h}:00 — ${count} transfers">${count}</td>`;
+            } else {
+                html += '<td class="text-center rounded" style="background:#0f172a;padding:4px;">.</td>';
+            }
+        }
+        html += '</tr>';
+    }
+    html += '</table>';
+
+    // Add legend
+    html += '<div class="flex items-center justify-end gap-2 mt-3 text-xs text-slate-500"><span>Less</span>';
+    for (let i = 0; i <= 4; i++) {
+        const intensity = i / 4;
+        const r = Math.round(99 + intensity * 156);
+        const g = Math.round(102 + intensity * 153);
+        const b = Math.round(241 - intensity * 141);
+        const alpha = 0.2 + intensity * 0.8;
+        html += `<span class="inline-block w-5 h-3 rounded" style="background:rgba(${r},${g},${b},${alpha});"></span>`;
+    }
+    html += '<span>More</span></div>';
+
+    container.innerHTML = html;
+
+    // Render corridors
+    if (data.corridors) renderCorridors(data.corridors);
+}
+
+function renderCorridors(corridors) {
+    const tbody = document.getElementById('corridors-tbody');
+    if (!corridors.length) { tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-slate-500">No corridor data</td></tr>'; return; }
+    tbody.innerHTML = corridors.map((c, i) => `<tr class="border-b border-slate-800/50 hover:bg-slate-800/30">
+        <td class="py-2 px-2 text-slate-500">${i+1}</td>
+        <td class="py-2 px-2 num-mono">
+            <a href="https://scan.dbkchain.io/address/${c.from}" target="_blank" class="text-blue-400 hover:underline">${shortAddr(c.from)}</a>
+            <span class="text-slate-500 mx-1">→</span>
+            <a href="https://scan.dbkchain.io/address/${c.to}" target="_blank" class="text-blue-400 hover:underline">${shortAddr(c.to)}</a>
+        </td>
+        <td class="py-2 px-2 text-right num-mono">${c.count}</td>
+        <td class="py-2 px-2 text-right num-mono text-green-400">${fmt(c.volume)}</td>
+    </tr>`).join('');
+}
+
+function renderConcentration(data) {
+    if (!data || !data.history || !data.history.length) return;
+
+    // Trend badge
+    const trendEl = document.getElementById('concentration-trend');
+    const trendColors = {
+        'increasing': 'bg-red-900/50 text-red-400',
+        'decreasing': 'bg-green-900/50 text-green-400',
+        'stable': 'bg-slate-700 text-slate-300',
+    };
+    const trendLabels = {
+        'increasing': '📈 More Concentrated',
+        'decreasing': '📉 Less Concentrated',
+        'stable': '➡️ Stable',
+    };
+    trendEl.className = `px-2 py-1 rounded text-xs font-medium ${trendColors[data.trend] || trendColors.stable}`;
+    trendEl.textContent = trendLabels[data.trend] || data.trend;
+
+    const ctx = document.getElementById('concentration-chart');
+    if (!ctx) return;
+    if (concentrationChart) concentrationChart.destroy();
+
+    const labels = data.history.map(h => `#${h.transfer_index}`);
+    const giniData = data.history.map(h => h.gini);
+    const top10Data = data.history.map(h => h.top10_share);
+    const top100Data = data.history.map(h => h.top100_share);
+    const holderData = data.history.map(h => h.holder_count);
+
+    concentrationChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Gini Coefficient',
+                    data: giniData,
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99,102,241,0.1)',
+                    yAxisID: 'y',
+                    tension: 0.3,
+                    fill: true,
+                },
+                {
+                    label: 'Top 10 Share %',
+                    data: top10Data,
+                    borderColor: '#ef4444',
+                    backgroundColor: 'transparent',
+                    yAxisID: 'y',
+                    tension: 0.3,
+                },
+                {
+                    label: 'Top 100 Share %',
+                    data: top100Data,
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'transparent',
+                    yAxisID: 'y',
+                    tension: 0.3,
+                    borderDash: [5, 3],
+                },
+                {
+                    label: 'Holders',
+                    data: holderData,
+                    borderColor: '#22c55e',
+                    backgroundColor: 'transparent',
+                    yAxisID: 'y1',
+                    tension: 0.3,
+                },
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { labels: { color: '#94a3b8', font: { size: 11 }, padding: 12 } },
+                tooltip: {
+                    callbacks: {
+                        title: (items) => `Transfer #${items[0].label.replace('#','')}`,
+                    }
+                }
+            },
+            scales: {
+                x: { ticks: { color: '#64748b', font: { size: 9 }, maxTicksLimit: 10 }, grid: { color: '#1e2a3a' } },
+                y: { position: 'left', title: { display: true, text: 'Gini / Share %', color: '#64748b' }, ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e2a3a' }, min: 0, max: 100 },
+                y1: { position: 'right', title: { display: true, text: 'Holders', color: '#64748b' }, ticks: { color: '#64748b', font: { size: 10 } }, grid: { drawOnChartArea: false } },
+            }
+        }
+    });
+}
+
 // ─── Actions ───
 async function setPrice() {
     const val = document.getElementById('price-input').value;
@@ -413,6 +943,7 @@ async function collectAll() {
         await fetch('/api/collect/bridge', {method:'POST'});
         await loadToken();
         await loadBridge();
+        if (!document.getElementById('whale-tab').classList.contains('hidden')) await loadWhaleTab();
         document.getElementById('last-update').textContent = 'Updated ' + new Date().toLocaleTimeString();
     } catch(e) { console.error(e); }
     if (btn) { btn.textContent = '↻ Refresh Data'; btn.disabled = false; }
@@ -422,7 +953,11 @@ async function collectAll() {
 (async () => {
     await loadToken();
     document.getElementById('last-update').textContent = 'Updated ' + new Date().toLocaleTimeString();
-    setInterval(() => { loadToken(); loadBridge(); }, 120000); // auto-refresh 2min
+    setInterval(() => {
+        loadToken(); loadBridge();
+        if (!document.getElementById('crosschain-tab').classList.contains('hidden')) loadCrossChain();
+        if (!document.getElementById('whale-tab').classList.contains('hidden')) loadWhaleTab();
+    }, 120000); // auto-refresh 2min
 })();
 </script>
 </body>

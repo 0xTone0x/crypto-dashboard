@@ -1,9 +1,11 @@
 """Blockscout GraphQL collector — fetches all NOXA token transfers with pagination."""
 import asyncio
+import logging
 import httpx
 from backend.db import get_db, get_kv, set_kv
 from backend import config
 
+logger = logging.getLogger(__name__)
 
 GRAPHQL_URL = config.DBK_GRAPHQL
 TOKEN_ADDR = config.NOXA_TOKEN.lower()
@@ -30,29 +32,87 @@ query GetTransfers($first: Int!, $after: String) {
 """ % TOKEN_ADDR
 
 
-async def fetch_transfers(client: httpx.AsyncClient, first: int = 20, after: str | None = None):
-    """Fetch a single page of token transfers from GraphQL.
+async def fetch_transfers(
+    client: httpx.AsyncClient,
+    first: int = 20,
+    after: str | None = None,
+    max_retries: int = 5,
+) -> dict:
+    """Fetch a single page of token transfers from GraphQL with retry/backoff.
 
     Note: DBK Chain Blockscout has a max GraphQL complexity of 200.
     With 5 fields per node, `first=20` gives complexity 100 (safe).
     """
     variables = {"first": first, "after": after}
-    resp = await client.post(
-        GRAPHQL_URL,
-        json={"query": TRANSFER_QUERY, "variables": variables},
-        timeout=config.HTTP_TIMEOUT,
+    last_error = None
+
+    for attempt in range(1, max_retries + 1):
+        try:
+            resp = await client.post(
+                GRAPHQL_URL,
+                json={"query": TRANSFER_QUERY, "variables": variables},
+                timeout=config.HTTP_TIMEOUT,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+
+            # GraphQL can return 200 with errors
+            if "errors" in data:
+                last_error = RuntimeError(f"GraphQL errors: {data['errors']}")
+                logger.warning(
+                    "  [blockscout] GraphQL errors (attempt %d/%d): %s",
+                    attempt,
+                    max_retries,
+                    data["errors"],
+                )
+            elif not data.get("data") or not data["data"].get("tokenTransfers"):
+                last_error = RuntimeError("Empty response from GraphQL")
+                logger.warning(
+                    "  [blockscout] empty response (attempt %d/%d)",
+                    attempt,
+                    max_retries,
+                )
+            else:
+                return data["data"]["tokenTransfers"]
+
+        except httpx.HTTPError as exc:
+            last_error = exc
+            logger.warning(
+                "  [blockscout] HTTP error (attempt %d/%d): %s",
+                attempt,
+                max_retries,
+                exc,
+            )
+
+        if attempt < max_retries:
+            backoff = min(2**attempt, 10)  # 1s, 2s, 4s, 8s, 10s
+            logger.info(
+                "  [blockscout] retrying in %ds (attempt %d/%d)",
+                backoff,
+                attempt,
+                max_retries,
+            )
+            await asyncio.sleep(backoff)
+
+    raise RuntimeError(
+        f"Failed to fetch transfers after {max_retries} retries: {last_error}"
     )
-    resp.raise_for_status()
-    data = resp.json()
-    if "errors" in data:
-        raise RuntimeError(f"GraphQL errors: {data['errors']}")
-    return data["data"]["tokenTransfers"]
 
 
-async def collect_all_transfers() -> dict:
-    """Paginate through ALL token transfers and store in DB. Returns summary stats."""
+async def collect_all_transfers(reset: bool = False) -> dict:
+    """Paginate through ALL token transfers and store in DB. Returns summary stats.
+
+    Args:
+        reset: If True, delete all existing rows and start fresh.
+    """
     db = await get_db()
     try:
+        if reset:
+            logger.info("  [blockscout] RESET: deleting all existing token_transfers")
+            await db.execute("DELETE FROM token_transfers")
+            await db.execute("DELETE FROM kv_store WHERE key='last_transfer_cursor'")
+            await db.commit()
+
         last_cursor = await get_kv(db, "last_transfer_cursor", None)
         after = last_cursor
         total_fetched = 0
@@ -66,10 +126,11 @@ async def collect_all_transfers() -> dict:
                 edges = result["edges"]
                 page_info = result["pageInfo"]
 
+                stored_this_page = 0
                 for edge in edges:
                     node = edge["node"]
                     try:
-                        await db.execute(
+                        cursor = await db.execute(
                             """INSERT OR IGNORE INTO token_transfers
                                (tx_hash, from_address, to_address, amount, block_number, log_index)
                                VALUES (?, ?, ?, ?, ?, ?)""",
@@ -82,23 +143,38 @@ async def collect_all_transfers() -> dict:
                                 0,
                             ),
                         )
-                        total_stored += db.total_changes - total_stored if False else 0
-                    except Exception:
-                        pass
+                        stored_this_page += cursor.rowcount
+                        await cursor.close()
+                    except Exception as exc:
+                        logger.debug("  [blockscout] insert error for tx %s: %s",
+                                     node.get("transactionHash", "?"), exc)
 
                 await db.commit()
                 rows_this_page = len(edges)
                 total_fetched += rows_this_page
-                print(f"  [blockscout] page {page}: {rows_this_page} transfers (total: {total_fetched})")
+                total_stored += stored_this_page
+
+                if page % 10 == 0 or rows_this_page < 20:
+                    logger.info(
+                        "  [blockscout] page %d: +%d rows (total fetched: %d, stored: %d)",
+                        page,
+                        rows_this_page,
+                        total_fetched,
+                        total_stored,
+                    )
 
                 if not page_info["hasNextPage"]:
+                    logger.info(
+                        "  [blockscout] reached end of pagination at page %d", page
+                    )
                     break
                 after = page_info["endCursor"]
                 if not after:
+                    logger.info("  [blockscout] no endCursor — stopping at page %d", page)
                     break
                 # Safety valve: avoid infinite loops
-                if page > 2000:
-                    print("  [blockscout] safety limit reached (2000 pages)")
+                if page > 3000:
+                    logger.warning("  [blockscout] safety limit reached (3000 pages)")
                     break
                 await asyncio.sleep(0.1)
 
@@ -110,6 +186,13 @@ async def collect_all_transfers() -> dict:
         row = await cursor.fetchone()
         total_in_db = row["c"]
         await cursor.close()
+
+        logger.info(
+            "  [blockscout] DONE: %d pages, %d fetched, %d in DB",
+            page,
+            total_fetched,
+            total_in_db,
+        )
 
         return {
             "status": "ok",

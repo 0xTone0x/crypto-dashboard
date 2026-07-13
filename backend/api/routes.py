@@ -2,9 +2,10 @@
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
 from typing import Optional
-from backend.analytics import token_analytics, bridge_analytics
-from backend.collectors import blockscout_collector, etherscan_collector
-from backend.db import get_db, set_kv
+from backend.analytics import token_analytics, bridge_analytics, whale_alerts, transfer_heatmap, concentration
+from backend.collectors import blockscout_collector, etherscan_collector, price_collector
+from backend.db import get_db, get_kv, set_kv
+from datetime import datetime
 
 router = APIRouter(prefix="/api")
 
@@ -54,6 +55,22 @@ async def set_price(body: PriceOverride):
         await db.close()
 
 
+@router.get("/token/price-history")
+async def token_price_history(limit: int = 100):
+    db = await get_db()
+    try:
+        cursor = await db.execute(
+            "SELECT ts, price, source FROM price_history ORDER BY id DESC LIMIT ?", (limit,)
+        )
+        rows = await cursor.fetchall()
+        await cursor.close()
+        return {
+            "history": [{"ts": r["ts"], "price": r["price"], "source": r["source"]} for r in reversed(rows)]
+        }
+    finally:
+        await db.close()
+
+
 # ─── Bridge endpoints ───
 
 @router.get("/bridge/stats")
@@ -66,6 +83,11 @@ async def bridge_timeseries():
     return {"data": await bridge_analytics.compute_timeseries()}
 
 
+@router.get("/bridge/timeseries-hourly")
+async def bridge_timeseries_hourly(hours: int = 168):
+    return {"data": await bridge_analytics.compute_timeseries_hourly(hours=hours)}
+
+
 @router.get("/bridge/top-depositors")
 async def bridge_top_depositors(limit: int = 20):
     return {"depositors": await bridge_analytics.compute_top_depositors(limit=limit)}
@@ -74,6 +96,39 @@ async def bridge_top_depositors(limit: int = 20):
 @router.get("/bridge/recent")
 async def bridge_recent(limit: int = 20):
     return {"transactions": await bridge_analytics.get_recent_bridge_txs(limit=limit)}
+
+
+# ─── Whale Alerts ───
+
+@router.get("/whale-alerts")
+async def whale_alerts_endpoint(limit: int = 20):
+    return {"alerts": await whale_alerts.get_whale_alerts(limit=limit)}
+
+
+# ─── Cross-Chain Analysis ───
+
+@router.get("/cross-chain/summary")
+async def cross_chain_summary():
+    return await bridge_analytics.compute_cross_chain_summary()
+
+
+@router.get("/cross-chain/bridgers-buyers")
+async def cross_chain_bridgers_buyers():
+    return await bridge_analytics.compute_bridgers_buyers()
+
+
+# ─── Transfer Heatmap ───
+
+@router.get("/token/transfer-heatmap")
+async def transfer_heatmap_endpoint():
+    return await transfer_heatmap.compute_heatmap()
+
+
+# ─── Concentration History ───
+
+@router.get("/token/concentration-history")
+async def concentration_history_endpoint():
+    return await concentration.compute_concentration_history()
 
 
 # ─── Collection triggers ───

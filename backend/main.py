@@ -11,7 +11,7 @@ from fastapi.responses import FileResponse
 
 from backend.db import init_db
 from backend.api.routes import router as api_router
-from backend.collectors import blockscout_collector, etherscan_collector
+from backend.collectors import blockscout_collector, etherscan_collector, price_collector
 
 FRONTEND_DIR = Path(__file__).parent.parent / "frontend"
 
