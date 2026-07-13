@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOXA Analytics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+        tailwind.config = { darkMode: 'class', theme: { extend: {
+            colors: { brand: { 50:'#eff6ff',500:'#6366f1',600:'#4f46e5',700:'#4338ca' } }
+        }}}
+    </script>
+    <style>
+        body { background: #0a0e1a; color: #e2e8f0; font-family: 'Inter', system-ui, sans-serif; }
+        .card { background: #131826; border: 1px solid #1e2a3a; border-radius: 12px; }
+        .glow { box-shadow: 0 0 30px rgba(99,102,241,0.15); }
+        .tab-active { background: #6366f1; color: #fff; }
+        .tab-inactive { background: #1e2a3a; color: #94a3b8; }
+        .tab-inactive:hover { background: #2a3a4e; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        .num-mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-[#0d111c] sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center font-bold text-xl text-white">N</div>
+                <div>
+                    <h1 class="text-xl font-bold text-white">NOXA Analytics</h1>
+                    <p class="text-xs text-slate-500">DBK Chain Token & Bridge Tracker</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div id="price-ticker" class="text-right">
+                    <span class="text-slate-400 text-sm">NOXA Price</span>
+                    <div class="text-lg font-bold text-green-400 num-mono" id="header-price">$—</div>
+                </div>
+                <button onclick="collectAll()" class="bg-brand-600 hover:bg-brand-500 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                    ↻ Refresh Data
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Tabs -->
+    <div class="max-w-7xl mx-auto px-4 mt-6">
+        <div class="flex gap-2 mb-6">
+            <button id="tab-token" onclick="switchTab('token')" class="tab-active px-5 py-2.5 rounded-lg font-medium text-sm transition-colors">📊 Token Analytics</button>
+            <button id="tab-bridge" onclick="switchTab('bridge')" class="tab-inactive px-5 py-2.5 rounded-lg font-medium text-sm transition-colors">🌉 Bridge Tracker</button>
+        </div>
+    </div>
+
+    <!-- Token Tab -->
+    <div id="token-tab" class="max-w-7xl mx-auto px-4 pb-8">
+        <!-- Overview cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="card p-5">
+                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">Total Supply</p>
+                <p class="text-2xl font-bold num-mono" id="t-supply">—</p>
+            </div>
+            <div class="card p-5">
+                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">Holders</p>
+                <p class="text-2xl font-bold num-mono" id="t-holders">—</p>
+            </div>
+            <div class="card p-5">
+                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">Price</p>
+                <p class="text-2xl font-bold text-green-400 num-mono" id="t-price">$—</p>
+            </div>
+            <div class="card p-5">
+                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">Market Cap</p>
+                <p class="text-2xl font-bold num-mono" id="t-mcap">$—</p>
+            </div>
+        </div>
+
+        <!-- Charts row -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="card p-6">
+                <h3 class="text-lg font-semibold mb-4">Supply Distribution</h3>
+                <div class="relative h-64">
+                    <canvas id="dist-chart"></canvas>
+                </div>
+            </div>
+            <div class="card p-6">
+                <h3 class="text-lg font-semibold mb-4">Cost Basis</h3>
+                <div class="relative h-64">
+                    <canvas id="cost-chart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Price override -->
+        <div class="card p-4 mb-6 flex items-center gap-3">
+            <span class="text-sm text-slate-400">Set NOXA Price:</span>
+            <input id="price-input" type="number" step="0.0001" placeholder="0.00" class="bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-1.5 text-sm w-32 num-mono focus:outline-none focus:border-brand-500">
+            <button onclick="setPrice()" class="bg-brand-600 hover:bg-brand-500 px-3 py-1.5 rounded-lg text-sm font-medium">Set</button>
+            <span class="text-xs text-slate-500 ml-2">Used for cost-basis & PnL calculations</span>
+        </div>
+
+        <!-- Holders table -->
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold mb-4">Top Holders</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-slate-400 text-xs uppercase border-b border-slate-800">
+                            <th class="text-left py-3 px-2">#</th>
+                            <th class="text-left py-3 px-2">Address</th>
+                            <th class="text-right py-3 px-2">Balance</th>
+                            <th class="text-right py-3 px-2">% Supply</th>
+                            <th class="text-right py-3 px-2">Avg Buy</th>
+                            <th class="text-right py-3 px-2">PnL</th>
+                        </tr>
+                    </thead>
+                    <tbody id="holders-tbody">
+                        <tr><td colspan="6" class="text-center py-8 text-slate-500">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bridge Tab -->
+    <div id="bridge-tab" class="max-w-7xl mx-auto px-4 pb-8 hidden">
+        <!-- Big stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="card p-5 glow">
+                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">Total ETH Bridged</p>
+                <p class="text-3xl font-bold text-green-400 num-mono" id="b-total">—</p>
+            </div>
+            <div class="card p-5">
+                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">Deposits</p>
+                <p class="text-2xl font-bold num-mono" id="b-deposits">—</p>
+            </div>
+            <div class="card p-5">
+                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">Unique Depositors</p>
+                <p class="text-2xl font-bold num-mono" id="b-depositors">—</p>
+            </div>
+            <div class="card p-5">
+                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">Avg Deposit</p>
+                <p class="text-2xl font-bold num-mono" id="b-avg">—</p>
+            </div>
+        </div>
+
+        <!-- Velocity row -->
+        <div class="grid grid-cols-3 gap-4 mb-6">
+            <div class="card p-4 text-center">
+                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">24h Volume</p>
+                <p class="text-xl font-bold text-blue-400 num-mono" id="b-24h">—</p>
+            </div>
+            <div class="card p-4 text-center">
+                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">7d Volume</p>
+                <p class="text-xl font-bold text-brand-400 num-mono" id="b-7d">—</p>
+            </div>
+            <div class="card p-4 text-center">
+                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">7d Velocity</p>
+                <p class="text-xl font-bold text-purple-400 num-mono" id="b-vel">—</p>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="card p-6">
+                <h3 class="text-lg font-semibold mb-4">Daily Bridge Volume</h3>
+                <div class="relative h-64">
+                    <canvas id="bridge-bar"></canvas>
+                </div>
+            </div>
+            <div class="card p-6">
+                <h3 class="text-lg font-semibold mb-4">Top Depositors</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-slate-400 text-xs uppercase border-b border-slate-800">
+                                <th class="text-left py-2 px-2">#</th>
+                                <th class="text-left py-2 px-2">Address</th>
+                                <th class="text-right py-2 px-2">Total ETH</th>
+                                <th class="text-right py-2 px-2">Count</th>
+                            </tr>
+                        </thead>
+                        <tbody id="depositors-tbody">
+                            <tr><td colspan="4" class="text-center py-6 text-slate-500">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent txs -->
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold mb-4">Recent Bridge Transactions</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-slate-400 text-xs uppercase border-b border-slate-800">
+                            <th class="text-left py-2 px-2">Tx Hash</th>
+                            <th class="text-left py-2 px-2">From</th>
+                            <th class="text-right py-2 px-2">Value</th>
+                            <th class="text-right py-2 px-2">Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recent-tbody">
+                        <tr><td colspan="4" class="text-center py-6 text-slate-500">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center py-6 text-slate-600 text-xs">
+        NOXA Analytics · DBK Chain · <span id="last-update">—</span>
+    </footer>
+
+<script>
+const API = '';
+let distChart, costChart, bridgeBarChart;
+
+// ─── Tab switching ───
+function switchTab(tab) {
+    document.getElementById('token-tab').classList.toggle('hidden', tab !== 'token');
+    document.getElementById('bridge-tab').classList.toggle('hidden', tab !== 'bridge');
+    document.getElementById('tab-token').className = tab === 'token' ? 'tab-active px-5 py-2.5 rounded-lg font-medium text-sm transition-colors' : 'tab-inactive px-5 py-2.5 rounded-lg font-medium text-sm transition-colors';
+    document.getElementById('tab-bridge').className = tab === 'bridge' ? 'tab-active px-5 py-2.5 rounded-lg font-medium text-sm transition-colors' : 'tab-inactive px-5 py-2.5 rounded-lg font-medium text-sm transition-colors';
+    if (tab === 'bridge') loadBridge();
+}
+
+// ─── Helpers ───
+function shortAddr(a) { return a ? a.slice(0,6) + '...' + a.slice(-4) : ''; }
+function fmt(n, dec=2) { return n != null ? Number(n).toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:dec}) : '—'; }
+function fmtEth(n) { return n != null ? Number(n).toFixed(4) : '—'; }
+
+async function api(path) {
+    try {
+        const r = await fetch(API + path);
+        return await r.json();
+    } catch(e) { console.error('API error:', path, e); return null; }
+}
+
+// ─── Token tab ───
+async function loadToken() {
+    const [info, dist, cb, holders] = await Promise.all([
+        api('/api/token/info'),
+        api('/api/token/distribution'),
+        api('/api/token/cost-basis'),
+        api('/api/token/holders?limit=100'),
+    ]);
+
+    if (info) {
+        document.getElementById('t-supply').textContent = fmt(info.total_supply, 0);
+        document.getElementById('t-holders').textContent = fmt(info.holders, 0);
+        document.getElementById('t-price').textContent = info.price > 0 ? '$' + info.price : '$—';
+        document.getElementById('t-mcap').textContent = info.market_cap > 0 ? '$' + fmt(info.market_cap) : '$—';
+        document.getElementById('header-price').textContent = info.price > 0 ? '$' + info.price : '$—';
+    }
+
+    if (dist) renderDistChart(dist);
+    if (cb) renderCostChart(cb);
+    if (holders && holders.holders) renderHolders(holders.holders);
+}
+
+function renderDistChart(d) {
+    const ctx = document.getElementById('dist-chart');
+    if (!ctx) return;
+    const top10 = d.top10_pct || 0;
+    const top100 = (d.top100_pct || 0) - top10;
+    const rest = Math.max(0, 100 - (d.top100_pct || 0));
+
+    if (distChart) distChart.destroy();
+    distChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: [`Top 10 (${top10}%)`, `Top 11-100 (${top100}%)`, `Rest (${rest.toFixed(1)}%)`],
+            datasets: [{
+                data: [top10, top100, rest],
+                backgroundColor: ['#6366f1', '#8b5cf6', '#334155'],
+                borderWidth: 0,
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 12, font: { size: 11 } } } }
+        }
+    });
+}
+
+function renderCostChart(cb) {
+    const ctx = document.getElementById('cost-chart');
+    if (!ctx) return;
+    if (costChart) costChart.destroy();
+    costChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Below Current Price', 'Above Current Price'],
+            datasets: [{
+                data: [cb.below_pct || 100, cb.above_pct || 0],
+                backgroundColor: ['#22c55e', '#ef4444'],
+                borderWidth: 0,
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 12, font: { size: 11 } } } }
+        }
+    });
+}
+
+function renderHolders(holders) {
+    const tbody = document.getElementById('holders-tbody');
+    if (!holders.length) { tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-slate-500">No data. Click Refresh Data.</td></tr>'; return; }
+    tbody.innerHTML = holders.map((h, i) => {
+        const pnlClass = h.pnl_pct > 0 ? 'text-green-400' : h.pnl_pct < 0 ? 'text-red-400' : 'text-slate-400';
+        const pnlSign = h.pnl_pct > 0 ? '+' : '';
+        return `<tr class="border-b border-slate-800/50 hover:bg-slate-800/30">
+            <td class="py-2 px-2 text-slate-500">${i+1}</td>
+            <td class="py-2 px-2"><a href="https://scan.dbkchain.io/address/${h.address}" target="_blank" class="text-blue-400 hover:underline num-mono">${shortAddr(h.address)}</a></td>
+            <td class="py-2 px-2 text-right num-mono">${fmt(h.balance)}</td>
+            <td class="py-2 px-2 text-right num-mono text-slate-400">${h.pct_supply}%</td>
+            <td class="py-2 px-2 text-right num-mono">$${h.avg_buy_price || '—'}</td>
+            <td class="py-2 px-2 text-right num-mono ${pnlClass}">${pnlSign}${h.pnl_pct}%</td>
+        </tr>`;
+    }).join('');
+}
+
+// ─── Bridge tab ───
+async function loadBridge() {
+    const [stats, ts, dep, recent] = await Promise.all([
+        api('/api/bridge/stats'),
+        api('/api/bridge/timeseries'),
+        api('/api/bridge/top-depositors?limit=20'),
+        api('/api/bridge/recent?limit=20'),
+    ]);
+
+    if (stats) {
+        document.getElementById('b-total').textContent = fmtEth(stats.total_eth);
+        document.getElementById('b-deposits').textContent = fmt(stats.total_deposits, 0);
+        document.getElementById('b-depositors').textContent = fmt(stats.unique_depositors, 0);
+        document.getElementById('b-avg').textContent = fmtEth(stats.avg_deposit);
+        document.getElementById('b-24h').textContent = fmtEth(stats.eth_24h);
+        document.getElementById('b-7d').textContent = fmtEth(stats.eth_7d);
+        document.getElementById('b-vel').textContent = fmtEth(stats.velocity_7d_per_day) + '/day';
+    }
+
+    if (ts && ts.data) renderBridgeBar(ts.data);
+    if (dep && dep.depositors) renderDepositors(dep.depositors);
+    if (recent && recent.transactions) renderRecent(recent.transactions);
+}
+
+function renderBridgeBar(data) {
+    const ctx = document.getElementById('bridge-bar');
+    if (!ctx) return;
+    const last30 = data.slice(-30);
+    if (bridgeBarChart) bridgeBarChart.destroy();
+    bridgeBarChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: last30.map(d => d.date.slice(5)),
+            datasets: [{
+                label: 'ETH Bridged',
+                data: last30.map(d => d.volume),
+                backgroundColor: '#6366f1',
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e2a3a' } },
+                y: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e2a3a' } },
+            }
+        }
+    });
+}
+
+function renderDepositors(dep) {
+    const tbody = document.getElementById('depositors-tbody');
+    if (!dep.length) { tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-slate-500">No data</td></tr>'; return; }
+    tbody.innerHTML = dep.map((d, i) => `<tr class="border-b border-slate-800/50 hover:bg-slate-800/30">
+        <td class="py-2 px-2 text-slate-500">${i+1}</td>
+        <td class="py-2 px-2"><a href="https://etherscan.io/address/${d.address}" target="_blank" class="text-blue-400 hover:underline num-mono">${shortAddr(d.address)}</a></td>
+        <td class="py-2 px-2 text-right num-mono text-green-400">${fmtEth(d.total_eth)}</td>
+        <td class="py-2 px-2 text-right num-mono text-slate-400">${d.deposit_count}</td>
+    </tr>`).join('');
+}
+
+function renderRecent(txs) {
+    const tbody = document.getElementById('recent-tbody');
+    if (!txs.length) { tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-slate-500">No data</td></tr>'; return; }
+    tbody.innerHTML = txs.map(t => `<tr class="border-b border-slate-800/50 hover:bg-slate-800/30">
+        <td class="py-2 px-2"><a href="https://etherscan.io/tx/${t.hash}" target="_blank" class="text-blue-400 hover:underline num-mono">${shortAddr(t.hash)}</a></td>
+        <td class="py-2 px-2"><a href="https://etherscan.io/address/${t.from}" target="_blank" class="text-blue-400 hover:underline num-mono">${shortAddr(t.from)}</a></td>
+        <td class="py-2 px-2 text-right num-mono text-green-400">${fmtEth(t.value_eth)} ETH</td>
+        <td class="py-2 px-2 text-right num-mono text-slate-400">${t.time_ago}</td>
+    </tr>`).join('');
+}
+
+// ─── Actions ───
+async function setPrice() {
+    const val = document.getElementById('price-input').value;
+    if (!val) return;
+    await fetch('/api/token/price', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({price: parseFloat(val)}) });
+    loadToken();
+}
+
+async function collectAll() {
+    const btn = event?.target; if (btn) { btn.textContent = '⟳ Collecting...'; btn.disabled = true; }
+    try {
+        await fetch('/api/collect/token', {method:'POST'});
+        await fetch('/api/collect/bridge', {method:'POST'});
+        await loadToken();
+        await loadBridge();
+        document.getElementById('last-update').textContent = 'Updated ' + new Date().toLocaleTimeString();
+    } catch(e) { console.error(e); }
+    if (btn) { btn.textContent = '↻ Refresh Data'; btn.disabled = false; }
+}
+
+// ─── Init ───
+(async () => {
+    await loadToken();
+    document.getElementById('last-update').textContent = 'Updated ' + new Date().toLocaleTimeString();
+    setInterval(() => { loadToken(); loadBridge(); }, 120000); // auto-refresh 2min
+})();
+</script>
+</body>
+</html>
