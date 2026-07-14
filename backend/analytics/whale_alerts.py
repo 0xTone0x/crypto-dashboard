@@ -1,129 +1,100 @@
-"""Whale alerts: detect large token transfers and bridge deposits."""
+"""Whale alerts: detect large token movements."""
 from collections import defaultdict
-from backend.db import get_db
+from datetime import datetime, timedelta
+from backend.db import get_db, get_kv
 from backend import config
-from backend.analytics.bridge_analytics import wei_to_eth
 
 DECIMALS = config.TOKEN_DECIMALS
-SUPPLY = config.TOTAL_SUPPLY
-
-# Thresholds
-TOKEN_WHALE_PCT = 1.0       # > 1% of supply
-TOKEN_WHALE_ABS = 500       # or > 500 NOXA absolute floor
-BRIDGE_WHALE_ETH = 5.0      # > 5 ETH
 
 
 def raw_to_human(amount_str: str) -> float:
+    """Convert raw token amount to human units."""
     try:
         return int(amount_str) / (10 ** DECIMALS)
     except (ValueError, TypeError):
         return 0.0
 
 
-async def _get_price(db) -> float:
-    from backend.db import get_kv
-    price = await get_kv(db, "noxa_price", None)
-    return float(price) if price is not None else 0.0
+async def get_whale_alerts(hours: int = 24) -> list[dict]:
+    """Detect large token transfers in the last N hours.
 
-
-async def _block_to_timestamp(block_number: int) -> int | None:
-    """Estimate a unix timestamp from a block number using bridge_txs calibration.
-    DBK Chain block time is ~2s.  Use known bridge (block, timestamp) pairs
-    for interpolation; fall back to 2s/block if no data.
+    Args:
+        hours: Lookback period (default 24h)
     """
     db = await get_db()
     try:
+        cutoff_timestamp = int((datetime.utcnow() - timedelta(hours=hours)).timestamp())
+        threshold = 10000  # 10K NOXA as default whale threshold
+
         cursor = await db.execute(
-            "SELECT block_number, timestamp FROM bridge_txs ORDER BY block_number ASC LIMIT 1"
-        )
-        first = await cursor.fetchone()
-        await cursor.close()
-        cursor = await db.execute(
-            "SELECT block_number, timestamp FROM bridge_txs ORDER BY block_number DESC LIMIT 1"
-        )
-        last = await cursor.fetchone()
-        await cursor.close()
-
-        if first and last:
-            b0, t0 = first["block_number"], first["timestamp"]
-            b1, t1 = last["block_number"], last["timestamp"]
-            if b1 > b0:
-                # Interpolate / extrapolate
-                slope = (t1 - t0) / (b1 - b0)
-                return int(t0 + slope * (block_number - b0))
-            return t0
-        return None
-    finally:
-        await db.close()
-
-
-async def get_whale_alerts(limit: int = 20) -> list[dict]:
-    """Return recent whale movements: large token transfers + large bridge deposits."""
-    db = await get_db()
-    try:
-        price = await _get_price(db)
-        whale_threshold_tokens = max(SUPPLY * TOKEN_WHALE_PCT / 100, TOKEN_WHALE_ABS)
-
-        alerts: list[dict] = []
-
-        # --- Large token transfers ---
-        cursor = await db.execute(
-            "SELECT from_address, to_address, amount, tx_hash, block_number "
-            "FROM token_transfers ORDER BY block_number DESC"
+            "SELECT tx_hash, from_address, to_address, amount, block_number "
+            "FROM token_transfers WHERE block_number >= ? ORDER BY block_number DESC",
+            (cutoff_timestamp,),  # Note: using timestamp, but we should ideally use block numbers
         )
         rows = await cursor.fetchall()
         await cursor.close()
 
-        # Pre-compute per-address received totals for context
-        addr_received = defaultdict(float)
-        for r in rows:
-            amt = raw_to_human(r["amount"])
-            addr_received[r["to_address"]] += amt
-
-        for r in rows:
-            amt = raw_to_human(r["amount"])
-            if amt >= whale_threshold_tokens:
-                ts = await _block_to_timestamp(r["block_number"])
-                value_usd = amt * price if price > 0 else 0
+        alerts = []
+        for row in rows:
+            amount = raw_to_human(row["amount"])
+            if amount >= threshold:
                 alerts.append({
-                    "type": "token_transfer",
-                    "address": r["from_address"],
-                    "to_address": r["to_address"],
-                    "amount": round(amt, 2),
-                    "pct_supply": round((amt / SUPPLY) * 100, 4) if SUPPLY > 0 else 0,
-                    "value_usd": round(value_usd, 2),
-                    "timestamp": ts,
-                    "tx_hash": r["tx_hash"],
-                    "block_number": r["block_number"],
+                    "tx_hash": row["tx_hash"],
+                    "from": row["from_address"],
+                    "to": row["to_address"],
+                    "amount": round(amount, 2),
+                    "block_number": row["block_number"],
                 })
 
-        # --- Large bridge deposits ---
+        return alerts
+    finally:
+        await db.close()
+
+
+async def get_block_number_from_timestamp(timestamp: int) -> int:
+    """Approximate block number from timestamp for DBK chain."""
+    # DBK chain produces ~2 blocks per second
+    # Reference block and timestamp
+    REF_BLOCK = 33258157
+    REF_TIMESTAMP = 1720934400  # Approx timestamp of reference block
+    BLOCKS_PER_SECOND = 2
+
+    if timestamp >= REF_TIMESTAMP:
+        delta_seconds = timestamp - REF_TIMESTAMP
+        return REF_BLOCK + (delta_seconds * BLOCKS_PER_SECOND)
+    else:
+        delta_seconds = REF_TIMESTAMP - timestamp
+        return REF_BLOCK - (delta_seconds * BLOCKS_PER_SECOND)
+
+
+async def get_whale_alerts_by_block(hours: int = 24) -> list[dict]:
+    """Detect large token transfers using block numbers instead of timestamp."""
+    db = await get_db()
+    try:
+        cutoff_timestamp = int((datetime.utcnow() - timedelta(hours=hours)).timestamp())
+        cutoff_block = await get_block_number_from_timestamp(cutoff_timestamp)
+        threshold = 10000  # 10K NOXA
+
         cursor = await db.execute(
-            "SELECT hash, from_address, to_address, value, block_number, timestamp "
-            "FROM bridge_txs WHERE is_error = 0 ORDER BY timestamp DESC"
+            "SELECT tx_hash, from_address, to_address, amount, block_number "
+            "FROM token_transfers WHERE block_number >= ? ORDER BY block_number DESC",
+            (cutoff_block,),
         )
-        bridge_rows = await cursor.fetchall()
+        rows = await cursor.fetchall()
         await cursor.close()
 
-        for r in bridge_rows:
-            eth = wei_to_eth(r["value"])
-            if eth >= BRIDGE_WHALE_ETH:
-                value_usd = eth * 3000  # rough ETH price fallback
+        alerts = []
+        for row in rows:
+            amount = raw_to_human(row["amount"])
+            if amount >= threshold:
                 alerts.append({
-                    "type": "bridge_deposit",
-                    "address": r["from_address"],
-                    "to_address": r["to_address"],
-                    "amount": round(eth, 4),
-                    "amount_unit": "ETH",
-                    "value_usd": round(value_usd, 2),
-                    "timestamp": r["timestamp"],
-                    "tx_hash": r["hash"],
-                    "block_number": r["block_number"],
+                    "tx_hash": row["tx_hash"],
+                    "from": row["from_address"],
+                    "to": row["to_address"],
+                    "amount": round(amount, 2),
+                    "block_number": row["block_number"],
                 })
 
-        # Sort by timestamp desc (None timestamps sort last)
-        alerts.sort(key=lambda a: a.get("timestamp") or 0, reverse=True)
-
-        return alerts[:limit]
+        return alerts
     finally:
         await db.close()

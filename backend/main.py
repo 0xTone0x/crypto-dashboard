@@ -52,16 +52,16 @@ async def _initial_collection():
 
 
 async def _periodic_refresh():
-    """Refresh token and bridge data every 30 minutes (1800 seconds)."""
+    """Refresh token and bridge data every 15 minutes (900 seconds)."""
     import time
     while True:
-        await asyncio.sleep(1800)  # 30 minutes
-        print("[refresh] Starting 30-min data refresh...")
+        await asyncio.sleep(900)  # 15 minutes
+        print("[refresh] Starting 15-min data refresh...")
         try:
             # Trigger incremental collection
             await blockscout_collector.collect_all_transfers()
             await etherscan_collector.collect_all_bridge_txs()
-            print("[refresh] 30-min data refresh complete")
+            print("[refresh] 15-min data refresh complete")
         except Exception as e:
             print(f"[refresh] Refresh failed: {e}")
 

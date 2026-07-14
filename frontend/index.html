@@ -4,13 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NOXA Analytics</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.tailwindcss.com">
+// Auto-refresh last refresh time every minute
+setInterval(loadLastRefresh, 60000);
+
+</script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js">
+// Auto-refresh last refresh time every minute
+setInterval(loadLastRefresh, 60000);
+
+</script>
     <script>
         tailwind.config = { darkMode: 'class', theme: { extend: {
             colors: { brand: { 50:'#eff6ff',500:'#6366f1',600:'#4f46e5',700:'#4338ca' } }
         }}}
-    </script>
+    
+// Auto-refresh last refresh time every minute
+setInterval(loadLastRefresh, 60000);
+
+</script>
     <style>
         body { background: #0a0e1a; color: #e2e8f0; font-family: 'Inter', system-ui, sans-serif; }
         .card { background: #131826; border: 1px solid #1e2a3a; border-radius: 12px; }
@@ -34,7 +46,12 @@
                     <h1 class="text-xl font-bold text-white">NOXA Analytics</h1>
                     <p class="text-xs text-slate-500">DBK Chain Token & Bridge Tracker</p>
                 </div>
+                        <div class="flex items-center gap-2 text-xs text-slate-500">
+                <span>Last refresh:</span>
+                <span id="last-refresh" class="text-slate-400">Loading...</span>
             </div>
+            </div>
+            <div class="flex items-center gap-4"></div>
             <div class="flex items-center gap-4">
                 <div id="price-ticker" class="text-right">
                     <span class="text-slate-400 text-sm">NOXA Price</span>
@@ -59,7 +76,25 @@
 
     <!-- Token Tab -->
     <div id="token-tab" class="max-w-7xl mx-auto px-4 pb-8">
-        <!-- Overview cards -->
+        
+        <!-- Cross-Chain Time Filter -->
+        <div class="card p-4 mb-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="text-sm text-slate-400">Bridge Window:</span>
+                    <select id="crosschain-time-filter" onchange="loadCrossChain()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                        <option value="0.04">1h</option>
+                        <option value="0.17">4h</option>
+                        <option value="0.5">12h</option>
+                        <option value="1" selected>24h</option>
+                        <option value="3">3d</option>
+                        <option value="0">All Time</option>
+                    </select>
+                </div>
+                <span class="text-xs text-slate-500" id="cc-window-label">Window: 24h</span>
+            </div>
+        </div>
+<!-- Overview cards -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div class="card p-5">
                 <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">Total Supply</p>
@@ -76,7 +111,15 @@
             <div class="card p-5">
                 <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">Market Cap</p>
                 <p class="text-2xl font-bold num-mono" id="t-mcap">$—</p>
+            
+        <!-- Price Chart -->
+        <div class="card p-6 mb-6">
+            <h3 class="text-lg font-semibold mb-4">NOXA Price History</h3>
+            <div class="relative h-64">
+                <canvas id="price-chart"></canvas>
             </div>
+        </div>
+</div>
         </div>
 
         <!-- Charts row -->
@@ -176,6 +219,25 @@
                 <p class="text-xs text-slate-500 mt-1"><span id="b-txs-7d">0</span> txs</p>
             </div>
         </div>
+
+        <!-- Bridge Time Filter -->
+        <div class="card p-4 mb-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="text-sm text-slate-400">Time Window:</span>
+                    <select id="bridge-time-filter" onchange="loadBridge()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                        <option value="1">1h</option>
+                        <option value="4">4h</option>
+                        <option value="12">12h</option>
+                        <option value="24" selected>24h</option>
+                        <option value="72">3d</option>
+                        <option value="0">All Time</option>
+                    </select>
+                </div>
+                <span class="text-xs text-slate-500" id="bridge-window-label">Window: 24h</span>
+            </div>
+        </div>
+
 
         <!-- Charts -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -340,10 +402,21 @@
 
         <!-- Transfer Heatmap -->
         <div class="card p-6 mb-6">
-            <h3 class="text-lg font-semibold mb-1 flex items-center gap-2">
-                <span class="text-2xl">🔥</span> Transfer Activity Heatmap
-            </h3>
-            <p class="text-xs text-slate-500 mb-4">Transfer counts by day of week × hour of day (UTC)</p>
+            
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold flex items-center gap-2">
+                    <span class="text-2xl">🔥</span> Transfer Activity Heatmap
+                </h3>
+                <div class="flex items-center gap-3">
+                    <select id="heatmap-time-filter" onchange="loadWhale()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                        <option value="24" selected>Last 24h</option>
+                        <option value="48">Last 48h</option>
+                        <option value="72">Last 72h</option>
+                    </select>
+                </div>
+            </div>
+            <p class="text-xs text-slate-500 mb-4">Transfer counts by hour of day (UTC)</p>
+
             <div id="heatmap-container" class="overflow-x-auto">
                 <p class="text-center text-slate-500 py-4">Loading heatmap...</p>
             </div>
@@ -427,6 +500,8 @@ async function api(path) {
 
 // ─── Token tab ───
 async function loadToken() {
+    await loadLastRefresh();
+    await loadPriceChart();
     const [info, dist, cb, holders] = await Promise.all([
         api('/api/token/info'),
         api('/api/token/distribution'),
@@ -512,10 +587,14 @@ function renderHolders(holders) {
 
 // ─── Bridge tab ───
 async function loadBridge() {
+    const hours = document.getElementById('bridge-time-filter').value;
+    const windowLabel = hours === '0' ? 'All Time' : hours + 'h';
+    document.getElementById('bridge-window-label').textContent = 'Window: ' + windowLabel;
+    
     const [stats, ts, dep, recent] = await Promise.all([
-        api('/api/bridge/stats'),
+        api('/api/bridge/stats?hours=' + hours),
         api('/api/bridge/timeseries'),
-        api('/api/bridge/top-depositors?limit=20'),
+        api('/api/bridge/top-depositors?limit=20&hours=' + hours),
         api('/api/bridge/recent?limit=20'),
     ]);
 
@@ -677,9 +756,13 @@ function renderRecent(txs) {
 
 // ─── Cross-Chain Tab ───
 async function loadCrossChain() {
+    const days = document.getElementById('crosschain-time-filter').value;
+    const windowLabel = days === '0' ? 'All Time' : (days >= 1 ? days + 'd' : (days * 24) + 'h');
+    document.getElementById('cc-window-label').textContent = 'Window: ' + windowLabel;
+    
     const [summary, bridgers] = await Promise.all([
-        api('/api/cross-chain/summary'),
-        api('/api/cross-chain/bridgers-buyers'),
+        api('/api/cross-chain/summary?days=' + days),
+        api('/api/cross-chain/bridgers-buyers?days=' + days),
     ]);
 
     if (summary) {
@@ -722,9 +805,11 @@ function renderCrossChainMatches(matches) {
 
 // ─── Whale & Activity Tab ───
 async function loadWhaleTab() {
+    const hours = document.getElementById('heatmap-time-filter').value;
+    
     const [whale, heatmap, conc] = await Promise.all([
         api('/api/whale-alerts?limit=20'),
-        api('/api/token/transfer-heatmap'),
+        api('/api/token/transfer-heatmap?hours=' + hours),
         api('/api/token/concentration-history'),
     ]);
     if (whale && whale.alerts) renderWhaleFeed(whale.alerts);
@@ -959,6 +1044,10 @@ async function collectAll() {
         if (!document.getElementById('whale-tab').classList.contains('hidden')) loadWhaleTab();
     }, 120000); // auto-refresh 2min
 })();
+
+// Auto-refresh last refresh time every minute
+setInterval(loadLastRefresh, 60000);
+
 </script>
 </body>
 </html>

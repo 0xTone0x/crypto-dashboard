@@ -14,27 +14,35 @@ def wei_to_eth(wei_str: str) -> float:
         return 0.0
 
 
-async def compute_bridge_stats(hours: int = 72) -> dict:
+async def compute_bridge_stats(hours: int = None) -> dict:
     """Compute bridge velocity stats.
 
     Args:
-        hours: Only count bridgers and volume from the last N hours (default 72h = 3 days).
+        hours: Only count bridgers and volume from the last N hours.
+               If None, use all-time data.
     """
     db = await get_db()
     try:
         now_ts = int(datetime.utcnow().timestamp())
-        cutoff = now_ts - hours * 3600
         
-        cursor = await db.execute(
-            "SELECT from_address, value, timestamp FROM bridge_txs WHERE timestamp >= ? ORDER BY timestamp ASC",
-            (cutoff,),
-        )
+        # If hours is specified, filter by time; otherwise, use all data
+        if hours is not None and hours > 0:
+            cutoff = now_ts - hours * 3600
+            cursor = await db.execute(
+                "SELECT from_address, value, timestamp FROM bridge_txs WHERE timestamp >= ? ORDER BY timestamp ASC",
+                (cutoff,),
+            )
+        else:
+            # All time
+            cursor = await db.execute(
+                "SELECT from_address, value, timestamp FROM bridge_txs ORDER BY timestamp ASC"
+            )
         rows = await cursor.fetchall()
         await cursor.close()
 
         if not rows:
             return {
-                "window_hours": hours,
+                "window_hours": hours or "all",
                 "total_eth": 0,
                 "total_deposits": 0,
                 "unique_depositors": 0,
@@ -81,7 +89,7 @@ async def compute_bridge_stats(hours: int = 72) -> dict:
         velocity_7d = eth_7d / (7 * 24)
 
         return {
-            "window_hours": hours,
+            "window_hours": hours or "all",
             "total_eth": round(total_eth, 4),
             "total_deposits": len(rows),
             "unique_depositors": len(depositors),
@@ -131,17 +139,26 @@ async def compute_timeseries() -> list[dict]:
         await db.close()
 
 
-async def compute_top_depositors(limit: int = 20, hours: int = 72) -> list[dict]:
-    """Top depositors by total ETH sent to bridge, within time window."""
+async def compute_top_depositors(limit: int = 20, hours: int = None) -> list[dict]:
+    """Top depositors by total ETH sent to bridge, within time window.
+
+    Args:
+        hours: If specified, filter to last N hours; if None, use all-time.
+    """
     db = await get_db()
     try:
         now_ts = int(datetime.utcnow().timestamp())
-        cutoff = now_ts - hours * 3600
         
-        cursor = await db.execute(
-            "SELECT from_address, value FROM bridge_txs WHERE timestamp >= ? ORDER BY value DESC",
-            (cutoff,),
-        )
+        if hours is not None and hours > 0:
+            cutoff = now_ts - hours * 3600
+            cursor = await db.execute(
+                "SELECT from_address, value FROM bridge_txs WHERE timestamp >= ? ORDER BY value DESC",
+                (cutoff,),
+            )
+        else:
+            cursor = await db.execute(
+                "SELECT from_address, value FROM bridge_txs ORDER BY value DESC"
+            )
         rows = await cursor.fetchall()
         await cursor.close()
 
@@ -240,22 +257,27 @@ async def compute_timeseries_hourly(hours: int = 168) -> list[dict]:
         await db.close()
 
 
-async def compute_cross_chain_summary(days: int = 3) -> dict:
+async def compute_cross_chain_summary(days: int = None) -> dict:
     """Summary of bridgers vs NOXA buyers overlap, filtered to recent bridgers only.
 
     Args:
-        days: Only count bridgers from the last N days (default 3).
+        days: Only count bridgers from the last N days. If None, use all-time.
     """
     db = await get_db()
     try:
         now_ts = int(datetime.utcnow().timestamp())
-        cutoff = now_ts - days * 86400
-
-        # Unique RECENT bridge depositor addresses (last N days)
-        cursor = await db.execute(
-            "SELECT DISTINCT LOWER(from_address) AS addr FROM bridge_txs WHERE timestamp >= ?",
-            (cutoff,),
-        )
+        
+        if days is not None and days > 0:
+            cutoff = now_ts - days * 86400
+            cursor = await db.execute(
+                "SELECT DISTINCT LOWER(from_address) AS addr FROM bridge_txs WHERE timestamp >= ?",
+                (cutoff,),
+            )
+        else:
+            # All-time
+            cursor = await db.execute(
+                "SELECT DISTINCT LOWER(from_address) AS addr FROM bridge_txs"
+            )
         bridger_rows = await cursor.fetchall()
         bridgers = {r["addr"] for r in bridger_rows}
         await cursor.close()
@@ -271,11 +293,17 @@ async def compute_cross_chain_summary(days: int = 3) -> dict:
         overlap = bridgers & buyers
 
         # ETH bridged per address — recent only, CAST AS REAL for overflow safety
-        cursor = await db.execute(
-            "SELECT LOWER(from_address) AS addr, SUM(CAST(value AS REAL)) AS total_wei "
-            "FROM bridge_txs WHERE timestamp >= ? GROUP BY LOWER(from_address)",
-            (cutoff,),
-        )
+        if days is not None and days > 0:
+            cursor = await db.execute(
+                "SELECT LOWER(from_address) AS addr, SUM(CAST(value AS REAL)) AS total_wei "
+                "FROM bridge_txs WHERE timestamp >= ? GROUP BY LOWER(from_address)",
+                (cutoff,),
+            )
+        else:
+            cursor = await db.execute(
+                "SELECT LOWER(from_address) AS addr, SUM(CAST(value AS REAL)) AS total_wei "
+                "FROM bridge_txs GROUP BY LOWER(from_address)"
+            )
         eth_by_addr = {}
         for r in await cursor.fetchall():
             eth_by_addr[r["addr"]] = r["total_wei"] / WEI_PER_ETH
@@ -286,7 +314,7 @@ async def compute_cross_chain_summary(days: int = 3) -> dict:
         non_buyer_eth = [eth_by_addr.get(a, 0) for a in non_buyer_addrs]
 
         return {
-            "window_days": days,
+            "window_days": days or "all",
             "total_bridgers": len(bridgers),
             "total_noxa_holders": len(buyers),
             "overlap_count": len(overlap),
@@ -298,29 +326,36 @@ async def compute_cross_chain_summary(days: int = 3) -> dict:
         await db.close()
 
 
-async def compute_bridgers_buyers(days: int = 3) -> dict:
+async def compute_bridgers_buyers(days: int = None) -> dict:
     """Addresses that BOTH bridged ETH (recent) AND bought NOXA (all-time), with per-address detail.
 
     Args:
-        days: Only count bridgers from the last N days (default 3).
+        days: Only count bridgers from the last N days. If None, use all-time.
     """
     db = await get_db()
     try:
         now_ts = int(datetime.utcnow().timestamp())
-        cutoff = now_ts - days * 86400
-
+        
         # Get NOXA price from KV
         price_str = await get_kv(db, "noxa_price")
         noxa_price = float(price_str) if price_str else 0.0
-
-        # ETH bridged per address — recent only, CAST AS REAL for overflow safety
-        cursor = await db.execute(
-            "SELECT LOWER(from_address) AS addr, "
-            "SUM(CAST(value AS REAL)) AS total_wei, "
-            "COUNT(*) AS tx_count "
-            "FROM bridge_txs WHERE timestamp >= ? GROUP BY LOWER(from_address)",
-            (cutoff,),
-        )
+        
+        if days is not None and days > 0:
+            cutoff = now_ts - days * 86400
+            cursor = await db.execute(
+                "SELECT LOWER(from_address) AS addr, "
+                "SUM(CAST(value AS REAL)) AS total_wei, "
+                "COUNT(*) AS tx_count "
+                "FROM bridge_txs WHERE timestamp >= ? GROUP BY LOWER(from_address)",
+                (cutoff,),
+            )
+        else:
+            cursor = await db.execute(
+                "SELECT LOWER(from_address) AS addr, "
+                "SUM(CAST(value AS REAL)) AS total_wei, "
+                "COUNT(*) AS tx_count "
+                "FROM bridge_txs GROUP BY LOWER(from_address)"
+            )
         bridge_data = {}
         for r in await cursor.fetchall():
             bridge_data[r["addr"]] = {
