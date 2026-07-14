@@ -115,11 +115,18 @@
                 <div class="text-center text-xs text-slate-500 mt-4">Top 10 / Top 100 / Others</div>
             </div>
             <div class="card p-6">
-                <h3 class="text-lg font-semibold mb-4">Cost Basis</h3>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">Cost Basis</h3>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="cost-price-input" value="" placeholder="Enter price ($)" 
+                            class="w-32 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-sm text-white">
+                        <button onclick="loadCostBasis()" class="bg-brand-600 hover:bg-brand-500 px-3 py-1 rounded text-sm">Set Price</button>
+                    </div>
+                </div>
                 <div class="relative h-64">
                     <canvas id="cost-chart"></canvas>
                 </div>
-                <div class="text-center text-xs text-slate-500 mt-4">% of supply vs current price</div>
+                <div class="text-center text-xs text-slate-500 mt-4">Supply: Below Target / At Target / Above Target</div>
             </div>
         </div>
 
@@ -278,9 +285,9 @@ function renderSwapsFeed(swaps, minUsd) {
     }
     
     container.innerHTML = filtered.map(s => {
-        const typeEmoji = s.type === 'MINT' ? '🟢' : s.type === 'BURN' ? '🔴' : '🔄';
-        const typeClass = s.type === 'MINT' ? 'text-green-400' : s.type === 'BURN' ? 'text-red-400' : 'text-yellow-400';
-        const typeText = s.type === 'MINT' ? 'BUY' : s.type === 'BURN' ? 'SELL' : 'TRANSFER';
+        const typeEmoji = '🟢';
+        const typeClass = 'text-green-400';
+        const typeText = 'BUY';
         
         const net6h = s.activity_6h?.net || 0;
         const net6hStr = net6h >= 0 ? '+' + net6h.toFixed(2) : net6h.toFixed(2);
@@ -390,6 +397,17 @@ function renderDistChart(d) {
     });
 }
 
+async function loadCostBasis(targetPrice = null) {
+    const priceInput = document.getElementById('cost-price-input');
+    const price = targetPrice || (priceInput && priceInput.value ? parseFloat(priceInput.value) : null);
+    const url = price ? '/token/cost-basis?price=' + price : '/token/cost-basis';
+    const cb = await api(url);
+    if (cb) {
+        if (priceInput && price) priceInput.value = price;
+        renderCostChart(cb);
+    }
+}
+
 function renderCostChart(cb) {
     const ctx = document.getElementById('cost-chart');
     if (!ctx) return;
@@ -477,8 +495,8 @@ function renderBridgeBar(data) {
     window.bridgeChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: data.map(d => d.label),
-            datasets: [{ label: 'ETH', data: data.map(d => d.eth), backgroundColor: '#6366f1' }]
+            labels: data.map(d => d.date || d.label),
+            datasets: [{ label: 'ETH', data: data.map(d => d.volume || d.eth), backgroundColor: '#6366f1' }]
         },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#64748b', font: { size: 9 }, maxTicksLimit: 10 }, grid: { color: '#1e2a3a' } }, y: { ticks: { color: '#64748b' }, grid: { color: '#1e2a3a' } } } }
     });

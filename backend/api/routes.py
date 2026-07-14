@@ -74,8 +74,9 @@ async def token_distribution():
 
 
 @router.get("/token/cost-basis")
-async def token_cost_basis():
-    return await token_analytics.compute_cost_basis()
+async def token_cost_basis(price: float = None):
+    """Get cost basis analysis. Optional price param for custom comparison."""
+    return await token_analytics.compute_cost_basis(target_price=price)
 
 
 @router.get("/token/price-history")

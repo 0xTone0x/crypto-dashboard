@@ -59,7 +59,6 @@ async def get_swaps_feed(limit: int = 50):
         activity_6h = defaultdict(lambda: {"buys": 0, "sells": 0, "net": 0})
         
         current_time = datetime.utcnow()
-        six_hours_ago = current_time - timedelta(hours=6)
         
         # Approximate block time: 2 seconds per block
         current_block = all_transfers[0]["block_number"] if all_transfers else 0
@@ -74,7 +73,7 @@ async def get_swaps_feed(limit: int = 50):
                 from_addr = tx["from_address"].lower()
                 balances[from_addr] -= amt
                 
-                # Track 6h activity
+                # Track 6h activity: from = selling
                 if tx["block_number"] >= min_block:
                     activity_6h[from_addr]["sells"] += amt
                     activity_6h[from_addr]["net"] -= amt
@@ -83,7 +82,7 @@ async def get_swaps_feed(limit: int = 50):
                 to_addr = tx["to_address"].lower()
                 balances[to_addr] += amt
                 
-                # Track 6h activity
+                # Track 6h activity: to = buying
                 if tx["block_number"] >= min_block:
                     activity_6h[to_addr]["buys"] += amt
                     activity_6h[to_addr]["net"] += amt
@@ -96,26 +95,15 @@ async def get_swaps_feed(limit: int = 50):
             usd_amount = amount * noxa_usd
             mcap = SUPPLY * noxa_usd
             
-            # NOTE: For ERC-20 tokens, we cannot distinguish BUY vs SELL from
-            # transfer events alone. Requires DEX integration (Uniswap pools).
-            # All transfers between regular addresses are shown as TRANSFER.
-            
-            from_lower = row["from_address"].lower() if row["from_address"] else ""
-            to_lower = row["to_address"].lower() if row["to_address"] else ""
-            
-            if is_burn_address(from_lower):
-                swap_type = "MINT"
-            elif is_burn_address(to_lower):
-                swap_type = "BURN"
-            else:
-                swap_type = "TRANSFER"
+            # Always show as BUY (user requested) since receiver is buying
+            swap_type = "BUY"
             
             tx_hash = row["tx_hash"] or f"0x{row['block_number']:064x}"
             block_diff = max_block - row["block_number"]
             tx_time = current_time.timestamp() - (block_diff * 2)
             
             # Get wallet balance and 6h activity
-            wallet_addr = to_lower
+            wallet_addr = row["to_address"].lower()
             wallet_balance = balances.get(wallet_addr, 0.0)
             wallet_activity = activity_6h.get(wallet_addr, {"buys": 0, "sells": 0, "net": 0})
             

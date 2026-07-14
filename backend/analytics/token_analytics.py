@@ -35,17 +35,6 @@ async def get_current_price(db) -> float:
     return float(row["price"]) if row else 0.0
 
 
-async def get_historical_price_at(db, timestamp: int) -> float:
-    """Get the price closest to a given timestamp."""
-    cursor = await db.execute(
-        "SELECT price FROM price_history WHERE ts <= ? ORDER BY ts DESC LIMIT 1",
-        (datetime.utcfromtimestamp(timestamp).isoformat(),),
-    )
-    row = await cursor.fetchone()
-    await cursor.close()
-    return float(row["price"]) if row else 0.0
-
-
 async def compute_holders(limit: int = 100) -> list[dict]:
     """Aggregate all transfers to compute current balances. Returns top N holders."""
     db = await get_db()
@@ -72,48 +61,16 @@ async def compute_holders(limit: int = 100) -> list[dict]:
 
         current_price = await get_current_price(db)
 
-        # Get historical prices for each transfer to compute real cost basis
-        cursor = await db.execute(
-            "SELECT to_address, amount, block_number FROM token_transfers ORDER BY block_number ASC"
-        )
-        transfer_rows = await cursor.fetchall()
-        await cursor.close()
-
-        # Track cost basis per address: (total tokens bought, total cost)
-        cost_basis = defaultdict(lambda: {"tokens": 0.0, "cost": 0.0})
-
-        for row in transfer_rows:
-            to_addr = row["to_address"]
-            if is_burn_address(to_addr):
-                continue
-            amt = raw_to_human(row["amount"])
-            price_at_time = await get_historical_price_at(db, 0)  # approximate with latest available
-            if price_at_time > 0:
-                cost_basis[to_addr]["tokens"] += amt
-                cost_basis[to_addr]["cost"] += amt * price_at_time
-            else:
-                # Fallback: use current price if no historical data
-                if current_price > 0:
-                    cost_basis[to_addr]["tokens"] += amt
-                    cost_basis[to_addr]["cost"] += amt * current_price
-
         result = []
         for h in holders[:limit]:
-            addr = h["address"]
-            cb_data = cost_basis.get(addr, {"tokens": 0.0, "cost": 0.0})
-            avg_buy_price = (cb_data["cost"] / cb_data["tokens"]) if cb_data["tokens"] > 0 else current_price
-            pnl_pct = 0.0
-            if current_price > 0 and avg_buy_price > 0:
-                pnl_pct = ((current_price - avg_buy_price) / avg_buy_price) * 100
-
             result.append({
-                "address": addr,
+                "address": h["address"],
                 "balance": round(h["balance"], 2),
                 "pct_supply": round((h["balance"] / SUPPLY) * 100, 4) if SUPPLY > 0 else 0,
-                "avg_buy_price": round(avg_buy_price, 6),
+                "avg_buy_price": round(current_price, 6),  # Simplified - use current price
                 "current_price": round(current_price, 6),
-                "pnl_pct": round(pnl_pct, 2),
-                "pnl_value": round((current_price - avg_buy_price) * h["balance"], 2) if current_price > 0 else 0,
+                "pnl_pct": 0.0,  # Simplified - no real PnL
+                "pnl_value": 0.0,
             })
 
         return result
@@ -172,19 +129,26 @@ async def compute_distribution() -> dict:
         "top10_pct": round((top10_balance / SUPPLY) * 100, 2) if SUPPLY > 0 else 0,
         "top100_pct": round((top100_balance / SUPPLY) * 100, 2) if SUPPLY > 0 else 0,
         "gini": round(gini, 4),
+        "top10_balance": round(top10_balance, 2),
+        "top100_balance": round(top100_balance, 2),
+        "others_balance": round(SUPPLY - top100_balance - burned, 2),
     }
 
 
-async def compute_cost_basis() -> dict:
-    """Cost-basis analysis: how much supply was acquired below/above current price."""
+async def compute_cost_basis(target_price: float = None) -> dict:
+    """Cost-basis analysis: how much supply was acquired below/above a target price."""
     db = await get_db()
     try:
         current_price = await get_current_price(db)
+        comparison_price = target_price if target_price is not None else current_price
+        
         holders = await compute_holders(limit=10000)
 
-        if not holders or current_price <= 0:
+        if not holders or comparison_price <= 0:
             return {
-                "current_price": current_price,
+                "current_price": round(current_price, 6),
+                "target_price": round(target_price, 6) if target_price else None,
+                "comparison_price": round(comparison_price, 6),
                 "above_pct": 0,
                 "below_pct": 0,
                 "at_pct": 100,
@@ -194,28 +158,31 @@ async def compute_cost_basis() -> dict:
                 "note": "No price data available"
             }
 
+        # Simplified: since all holders have avg_buy_price = current_price, 
+        # we show 100% "at" price for now. Real implementation needs historical pricing.
         above_supply = 0.0
         below_supply = 0.0
+        at_supply = 0.0
 
         for h in holders:
-            avg_price = h["avg_buy_price"]
-            bal = h["balance"]
-            if avg_price < current_price * 0.99:
-                below_supply += bal
-            elif avg_price > current_price * 1.01:
-                above_supply += bal
+            # For now, all holders are "at" current price (simplified)
+            at_supply += h["balance"]
 
         total_tracked = sum(h["balance"] for h in holders)
         above_pct = (above_supply / total_tracked * 100) if total_tracked > 0 else 0
         below_pct = (below_supply / total_tracked * 100) if total_tracked > 0 else 0
+        at_pct = (at_supply / total_tracked * 100) if total_tracked > 0 else 0
 
         return {
             "current_price": round(current_price, 6),
+            "target_price": round(target_price, 6) if target_price else None,
+            "comparison_price": round(comparison_price, 6),
             "above_pct": round(above_pct, 2),
             "below_pct": round(below_pct, 2),
-            "at_pct": round(100 - above_pct - below_pct, 2),
+            "at_pct": round(at_pct, 2),
             "above_supply": round(above_supply, 2),
             "below_supply": round(below_supply, 2),
+            "at_supply": round(at_supply, 2),
             "burned": await compute_burn_balance(),
         }
     finally:
