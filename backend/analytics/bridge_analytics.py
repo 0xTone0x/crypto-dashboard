@@ -14,18 +14,27 @@ def wei_to_eth(wei_str: str) -> float:
         return 0.0
 
 
-async def compute_bridge_stats() -> dict:
-    """Compute bridge velocity stats."""
+async def compute_bridge_stats(hours: int = 72) -> dict:
+    """Compute bridge velocity stats.
+
+    Args:
+        hours: Only count bridgers and volume from the last N hours (default 72h = 3 days).
+    """
     db = await get_db()
     try:
+        now_ts = int(datetime.utcnow().timestamp())
+        cutoff = now_ts - hours * 3600
+        
         cursor = await db.execute(
-            "SELECT from_address, value, timestamp FROM bridge_txs ORDER BY timestamp ASC"
+            "SELECT from_address, value, timestamp FROM bridge_txs WHERE timestamp >= ? ORDER BY timestamp ASC",
+            (cutoff,),
         )
         rows = await cursor.fetchall()
         await cursor.close()
 
         if not rows:
             return {
+                "window_hours": hours,
                 "total_eth": 0,
                 "total_deposits": 0,
                 "unique_depositors": 0,
@@ -52,9 +61,6 @@ async def compute_bridge_stats() -> dict:
         total_eth = sum(wei_to_eth(r["value"]) for r in rows)
         depositors = set(r["from_address"] for r in rows)
 
-        now_ts = int(datetime.utcnow().timestamp())
-
-        # ─── Volume per time window ───
         eth_1h = sum(wei_to_eth(r["value"]) for r in rows if r["timestamp"] >= now_ts - 3600)
         eth_6h = sum(wei_to_eth(r["value"]) for r in rows if r["timestamp"] >= now_ts - 3600 * 6)
         eth_12h = sum(wei_to_eth(r["value"]) for r in rows if r["timestamp"] >= now_ts - 3600 * 12)
@@ -62,14 +68,12 @@ async def compute_bridge_stats() -> dict:
         eth_7d = sum(wei_to_eth(r["value"]) for r in rows if r["timestamp"] >= now_ts - 86400 * 7)
         eth_30d = sum(wei_to_eth(r["value"]) for r in rows if r["timestamp"] >= now_ts - 86400 * 30)
 
-        # ─── Deposit counts per time window ───
         txs_1h = sum(1 for r in rows if r["timestamp"] >= now_ts - 3600)
         txs_6h = sum(1 for r in rows if r["timestamp"] >= now_ts - 3600 * 6)
         txs_12h = sum(1 for r in rows if r["timestamp"] >= now_ts - 3600 * 12)
         txs_24h = sum(1 for r in rows if r["timestamp"] >= now_ts - 86400)
         txs_7d = sum(1 for r in rows if r["timestamp"] >= now_ts - 86400 * 7)
 
-        # ─── Velocity (ETH/hour) per window ───
         velocity_1h = eth_1h / 1
         velocity_6h = eth_6h / 6
         velocity_12h = eth_12h / 12
@@ -77,24 +81,22 @@ async def compute_bridge_stats() -> dict:
         velocity_7d = eth_7d / (7 * 24)
 
         return {
+            "window_hours": hours,
             "total_eth": round(total_eth, 4),
             "total_deposits": len(rows),
             "unique_depositors": len(depositors),
             "avg_deposit": round(total_eth / len(rows), 4) if rows else 0,
-            # Volume windows
             "eth_1h": round(eth_1h, 4),
             "eth_6h": round(eth_6h, 4),
             "eth_12h": round(eth_12h, 4),
             "eth_24h": round(eth_24h, 4),
             "eth_7d": round(eth_7d, 4),
             "eth_30d": round(eth_30d, 4),
-            # Tx counts per window
             "txs_1h": txs_1h,
             "txs_6h": txs_6h,
             "txs_12h": txs_12h,
             "txs_24h": txs_24h,
             "txs_7d": txs_7d,
-            # Velocity (ETH/hour)
             "velocity_1h": round(velocity_1h, 4),
             "velocity_6h": round(velocity_6h, 4),
             "velocity_12h": round(velocity_12h, 4),
@@ -129,12 +131,16 @@ async def compute_timeseries() -> list[dict]:
         await db.close()
 
 
-async def compute_top_depositors(limit: int = 20) -> list[dict]:
-    """Top depositors by total ETH sent to bridge."""
+async def compute_top_depositors(limit: int = 20, hours: int = 72) -> list[dict]:
+    """Top depositors by total ETH sent to bridge, within time window."""
     db = await get_db()
     try:
+        now_ts = int(datetime.utcnow().timestamp())
+        cutoff = now_ts - hours * 3600
+        
         cursor = await db.execute(
-            "SELECT from_address, value FROM bridge_txs ORDER BY value DESC"
+            "SELECT from_address, value FROM bridge_txs WHERE timestamp >= ? ORDER BY value DESC",
+            (cutoff,),
         )
         rows = await cursor.fetchall()
         await cursor.close()
@@ -324,7 +330,7 @@ async def compute_bridgers_buyers(days: int = 3) -> dict:
             }
         await cursor.close()
 
-        # NOXA bought per address (to_address = buyer) — use CAST(amount AS REAL) for overflow safety
+        # NOXA bought per address (to_address = buyer) — all time
         cursor = await db.execute(
             "SELECT LOWER(to_address) AS addr, "
             "SUM(CAST(amount AS REAL)) AS total_amount, "
@@ -346,10 +352,7 @@ async def compute_bridgers_buyers(days: int = 3) -> dict:
         for addr in sorted(overlap, key=lambda a: bridge_data[a]["total_eth"], reverse=True):
             eth = bridge_data[addr]["total_eth"]
             noxa = noxa_data[addr]["total_noxa"]
-            # pct_of_bridged_spent = estimated USD value of NOXA / USD value of ETH bridged
-            # If we have a NOXA price, estimate USD value of NOXA purchased
             noxa_value_usd = noxa * noxa_price
-            # Rough ETH price assumption not available; use ratio of NOXA tokens to ETH bridged
             pct = round((noxa / eth * 100), 2) if eth > 0 else 0
             matches.append({
                 "address": addr,
@@ -365,6 +368,7 @@ async def compute_bridgers_buyers(days: int = 3) -> dict:
         total_noxa_bought = sum(m["total_noxa_bought"] for m in matches)
 
         return {
+            "window_days": days,
             "matches": matches,
             "match_count": len(matches),
             "total_eth_by_buyers": round(total_eth_by_buyers, 4),
