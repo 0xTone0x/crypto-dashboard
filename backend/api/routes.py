@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
 from typing import Optional
-from backend.analytics import token_analytics, bridge_analytics, whale_alerts, transfer_heatmap, concentration
+from backend.analytics import token_analytics, bridge_analytics, whale_alerts, transfer_heatmap, concentration, swap_feed
 from backend.collectors import blockscout_collector, etherscan_collector, price_collector
 from backend.db import get_db, get_kv, set_kv
 from datetime import datetime
@@ -105,6 +105,11 @@ async def token_price_history(limit: int = 100):
 @router.get("/token/last-refresh")
 async def token_last_refresh():
     return await token_analytics.get_last_refresh()
+
+
+@router.get("/token/swaps")
+async def token_swaps(limit: int = 50):
+    return {"swaps": await swap_feed.get_swaps_feed(limit=limit)}
 
 
 # ─── Bridge endpoints ───

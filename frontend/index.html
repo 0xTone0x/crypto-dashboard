@@ -4,202 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NOXA Analytics</title>
-    <script src="https://cdn.tailwindcss.com">
-// Auto-refresh last refresh time every minute
-setInterval(loadLastRefresh, 60000);
-
-</script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js">
-// Auto-refresh last refresh time every minute
-setInterval(loadLastRefresh, 60000);
-
-</script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script>
         tailwind.config = { darkMode: 'class', theme: { extend: {
             colors: { brand: { 50:'#eff6ff',500:'#6366f1',600:'#4f46e5',700:'#4338ca' } }
         }}}
-    
-// Auto-refresh last refresh time every minute
-setInterval(loadLastRefresh, 60000);
-
-</script>
+    </script>
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap');
-    
-    body { 
-        background: #0a0a0a; 
-        color: #00ff41; 
-        font-family: 'Rajdhani', sans-serif; 
-        background-image: 
-            linear-gradient(rgba(0, 255, 65, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0, 255, 65, 0.03) 1px, transparent 1px);
-        background-size: 30px 30px;
-    }
-    
-    .card { 
-        background: linear-gradient(135deg, #111 0%, #0a0a0a 100%);
-        border: 1px solid #00ff41;
-        border-radius: 0;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, #00ff41, transparent);
-        animation: scan 3s linear infinite;
-    }
-    
-    .card::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 20px;
-        height: 20px;
-        border: 2px solid #ff006e;
-        border-radius: 50%;
-        animation: pulse 2s infinite;
-    }
-    
-    @keyframes scan {
-        0% { opacity: 0.3; }
-        50% { opacity: 1; }
-        100% { opacity: 0.3; }
-    }
-    
-    @keyframes pulse {
-        0%, 100% { transform: scale(0.8); opacity: 0.5; }
-        50% { transform: scale(1.2); opacity: 1; }
-    }
-    
-    .tab-active { 
-        background: #00ff41 !important; 
-        color: #000 !important; 
-        border: 2px solid #00ff41 !important;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-    }
-    .tab-inactive { 
-        background: transparent !important; 
-        color: #00ff41 !important; 
-        border: 1px solid #00ff4180 !important;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-    }
-    .tab-inactive:hover { 
-        background: #00ff4120 !important;
-        border-color: #00ff41 !important;
-    }
-    
-    .glow { 
-        box-shadow: 0 0 30px rgba(0, 255, 65, 0.3), inset 0 0 30px rgba(0, 255, 65, 0.05);
-    }
-    
-    .magenta { color: #ff006e; }
-    .orange { color: #ff6b00; }
-    .cyan { color: #00ffff; }
-    
-    ::-webkit-scrollbar { width: 8px; height: 8px; }
-    ::-webkit-scrollbar-thumb { background: #00ff41; border-radius: 0; }
-    ::-webkit-scrollbar-track { background: #0a0a0a; }
-    
-    .num-mono { 
-        font-family: 'Share Tech Mono', 'Fira Code', monospace; 
-        text-shadow: 0 0 10px #00ff41;
-        color: #00ff41 !important;
-    }
-    
-    header {
-        background: linear-gradient(90deg, #0a0a0a 0%, #111 50%, #0a0a0a 100%);
-        border-bottom: 2px solid #00ff41;
-        box-shadow: 0 4px 20px rgba(0, 255, 65, 0.2);
-    }
-    
-    button.bg-brand-600 {
-        background: #ff6b00;
-        color: #000;
-        border: 2px solid #ff6b00;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-    }
-    
-    button.bg-brand-600:hover {
-        background: transparent;
-        color: #ff6b00;
-        box-shadow: 0 0 20px rgba(255, 107, 0, 0.5);
-    }
-    
-    select, input {
-        background: #000;
-        border: 1px solid #00ff41;
-        color: #00ff41;
-        font-family: 'Share Tech Mono', monospace;
-    }
-    
-    select:focus, input:focus {
-        outline: none;
-        border-color: #ff6b00;
-        box-shadow: 0 0 10px rgba(255, 107, 0, 0.5);
-    }
-    
-    h1, h2, h3 {
-        text-transform: uppercase;
-        letter-spacing: 3px;
-        font-family: 'Orbitron', sans-serif;
-    }
-    
-    p, span, td, th {
-        font-family: 'Rajdhani', sans-serif;
-    }
-    
-    table {
-        border: 1px solid #00ff4140;
-        background: #0a0a0a;
-    }
-    
-    th {
-        background: #00ff4120;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        border-bottom: 1px solid #00ff41;
-    }
-    
-    tr {
-        border-bottom: 1px solid #00ff4120;
-    }
-    
-    tr:hover {
-        background: #00ff4110;
-    }
-    
-    a {
-        color: #00ffff;
-        text-shadow: 0 0 5px #00ffff;
-    }
-    
-    .text-slate-400 { color: #00ff4180 !important; }
-    .text-slate-500 { color: #00ff4160 !important; }
-    .text-slate-300 { color: #00ff41 !important; }
-    
-    .text-green-400 { color: #00ff41 !important; }
-    .text-purple-400 { color: #ff006e !important; }
-    .text-cyan-400 { color: #00ffff !important; }
-    .text-blue-400 { color: #0066ff !important; }
-    .text-red-400 { color: #ff0040 !important; }
-    .text-yellow-400 { color: #ffcc00 !important; }
-    
-    .bg-brand-600 { background: #ff6b00 !important; }
-    .hover\:bg-brand-500:hover { background: #ff8800 !important; }
-</style>
+        body { background: #0a0e1a; color: #e2e8f0; font-family: 'Inter', system-ui, sans-serif; }
+        .card { background: #131826; border: 1px solid #1e2a3a; border-radius: 12px; }
+        .glow { box-shadow: 0 0 30px rgba(99,102,241,0.15); }
+        .tab-active { background: #6366f1; color: #fff; }
+        .tab-inactive { background: #1e2a3a; color: #94a3b8; }
+        .tab-inactive:hover { background: #2a3a4e; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        .num-mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    </style>
 </head>
 <body class="min-h-screen">
-    <!-- Header -->
     <header class="border-b border-slate-800 bg-[#0d111c] sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -208,12 +33,11 @@ setInterval(loadLastRefresh, 60000);
                     <h1 class="text-xl font-bold text-white">NOXA Analytics</h1>
                     <p class="text-xs text-slate-500">DBK Chain Token & Bridge Tracker</p>
                 </div>
-                        <div class="flex items-center gap-2 text-xs text-slate-500">
-                <span>Last refresh:</span>
-                <span id="last-refresh" class="text-slate-400">Loading...</span>
+                <div class="flex items-center gap-2 text-xs text-slate-500">
+                    <span>Last refresh:</span>
+                    <span id="last-refresh" class="text-slate-400">Loading...</span>
+                </div>
             </div>
-            </div>
-            <div class="flex items-center gap-4"></div>
             <div class="flex items-center gap-4">
                 <div id="price-ticker" class="text-right">
                     <span class="text-slate-400 text-sm">NOXA Price</span>
@@ -226,7 +50,6 @@ setInterval(loadLastRefresh, 60000);
         </div>
     </header>
 
-    <!-- Tabs -->
     <div class="max-w-7xl mx-auto px-4 mt-6">
         <div class="flex gap-2 mb-6">
             <button id="tab-token" onclick="switchTab('token')" class="tab-active px-5 py-2.5 rounded-lg font-medium text-sm transition-colors">📊 Token Analytics</button>
@@ -236,9 +59,20 @@ setInterval(loadLastRefresh, 60000);
         </div>
     </div>
 
-    <!-- Token Tab -->
     <div id="token-tab" class="max-w-7xl mx-auto px-4 pb-8">
-        <!-- Overview cards -->
+        <!-- Real-time Swaps Feed -->
+        <div class="card p-4 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold flex items-center gap-2">
+                    <span class="text-2xl">📡</span> Live Swaps
+                </h3>
+                <span class="text-xs text-slate-500">Auto-updates every 30s</span>
+            </div>
+            <div id="swaps-feed" class="space-y-2 max-h-80 overflow-y-auto">
+                <p class="text-center text-slate-500 py-4">Loading swaps...</p>
+            </div>
+        </div>
+
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div class="card p-5">
                 <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">Total Supply</p>
@@ -258,7 +92,6 @@ setInterval(loadLastRefresh, 60000);
             </div>
         </div>
 
-        <!-- Price Chart -->
         <div class="card p-6 mb-6">
             <h3 class="text-lg font-semibold mb-4">NOXA Price History</h3>
             <div class="relative h-64">
@@ -266,7 +99,6 @@ setInterval(loadLastRefresh, 60000);
             </div>
         </div>
 
-        <!-- Charts row -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <div class="card p-6">
                 <h3 class="text-lg font-semibold mb-4">Supply Distribution</h3>
@@ -282,15 +114,6 @@ setInterval(loadLastRefresh, 60000);
             </div>
         </div>
 
-        <!-- Price override -->
-        <div class="card p-4 mb-6 flex items-center gap-3">
-            <span class="text-sm text-slate-400">Set NOXA Price:</span>
-            <input id="price-input" type="number" step="0.0001" placeholder="0.00" class="bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-1.5 text-sm w-32 num-mono focus:outline-none focus:border-brand-500">
-            <button onclick="setPrice()" class="bg-brand-600 hover:bg-brand-500 px-3 py-1.5 rounded-lg text-sm font-medium">Set</button>
-            <span class="text-xs text-slate-500 ml-2">Used for cost-basis & PnL calculations</span>
-        </div>
-
-        <!-- Holders table -->
         <div class="card p-6">
             <h3 class="text-lg font-semibold mb-4">Top Holders</h3>
             <div class="overflow-x-auto">
@@ -313,9 +136,24 @@ setInterval(loadLastRefresh, 60000);
         </div>
     </div>
 
-    <!-- Bridge Tab -->
     <div id="bridge-tab" class="max-w-7xl mx-auto px-4 pb-8 hidden">
-        <!-- Big stats -->
+        <div class="card p-4 mb-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="text-sm text-slate-400">Analysis Window:</span>
+                    <select id="bridge-time-filter" onchange="loadBridge()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white">
+                        <option value="1">1h</option>
+                        <option value="4">4h</option>
+                        <option value="12">12h</option>
+                        <option value="24" selected>24h</option>
+                        <option value="72">3d</option>
+                        <option value="0">All Time</option>
+                    </select>
+                </div>
+                <span class="text-xs text-slate-500" id="bridge-window-label">Window: 24h</span>
+            </div>
+        </div>
+
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div class="card p-5 glow">
                 <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">Total ETH Bridged</p>
@@ -335,119 +173,20 @@ setInterval(loadLastRefresh, 60000);
             </div>
         </div>
 
-        <!-- Velocity row -->
-        <div class="grid grid-cols-3 md:grid-cols-5 gap-4 mb-6">
-            <div class="card p-4 text-center">
-                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">1h Velocity</p>
-                <p class="text-xl font-bold text-cyan-400 num-mono" id="b-vel-1h">—</p>
-                <p class="text-xs text-slate-500 mt-1"><span id="b-txs-1h">0</span> txs</p>
-            </div>
-            <div class="card p-4 text-center">
-                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">6h Velocity</p>
-                <p class="text-xl font-bold text-cyan-300 num-mono" id="b-vel-6h">—</p>
-                <p class="text-xs text-slate-500 mt-1"><span id="b-txs-6h">0</span> txs</p>
-            </div>
-            <div class="card p-4 text-center">
-                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">12h Velocity</p>
-                <p class="text-xl font-bold text-blue-400 num-mono" id="b-vel-12h">—</p>
-                <p class="text-xs text-slate-500 mt-1"><span id="b-txs-12h">0</span> txs</p>
-            </div>
-            <div class="card p-4 text-center">
-                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">24h Volume</p>
-                <p class="text-xl font-bold text-blue-300 num-mono" id="b-24h">—</p>
-                <p class="text-xs text-slate-500 mt-1"><span id="b-txs-24h">0</span> txs</p>
-            </div>
-            <div class="card p-4 text-center">
-                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">7d Velocity</p>
-                <p class="text-xl font-bold text-purple-400 num-mono" id="b-vel-7d">—</p>
-                <p class="text-xs text-slate-500 mt-1"><span id="b-txs-7d">0</span> txs</p>
-            </div>
-        </div>
-
-        <!-- Bridge Time Filter -->
-        <div class="card p-4 mb-6">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <span class="text-sm text-slate-400">Analysis Window:</span>
-                    <select id="bridge-time-filter" onchange="loadBridge()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
-                        <option value="1">1h</option>
-                        <option value="4">4h</option>
-                        <option value="12">12h</option>
-                        <option value="24" selected>24h</option>
-                        <option value="72">3d</option>
-                        <option value="0">All Time</option>
-                    </select>
-                </div>
-                <span class="text-xs text-slate-500" id="bridge-window-label">Window: 24h</span>
-            </div>
-        </div>
-
-
-        <!-- Charts -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div class="card p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold">Bridge Volume</h3>
-                    <div class="flex gap-1">
-                        <button onclick="setChartResolution('1H', 24)" id="res-1H" class="px-2 py-1 rounded text-xs font-medium bg-slate-700 text-slate-300 hover:bg-slate-600">1H</button>
-                        <button onclick="setChartResolution('6H', 168)" id="res-6H" class="px-2 py-1 rounded text-xs font-medium bg-brand-600 text-white">6H</button>
-                        <button onclick="setChartResolution('1D', 720)" id="res-1D" class="px-2 py-1 rounded text-xs font-medium bg-slate-700 text-slate-300 hover:bg-slate-600">1D</button>
-                        <button onclick="setChartResolution('1W', 168)" id="res-1W" class="px-2 py-1 rounded text-xs font-medium bg-slate-700 text-slate-300 hover:bg-slate-600">1W</button>
-                    </div>
-                </div>
-                <div class="relative h-64">
-                    <canvas id="bridge-bar"></canvas>
-                </div>
-            </div>
-            <div class="card p-6">
-                <h3 class="text-lg font-semibold mb-4">Top Depositors</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="text-slate-400 text-xs uppercase border-b border-slate-800">
-                                <th class="text-left py-2 px-2">#</th>
-                                <th class="text-left py-2 px-2">Address</th>
-                                <th class="text-right py-2 px-2">Total ETH</th>
-                                <th class="text-right py-2 px-2">Count</th>
-                            </tr>
-                        </thead>
-                        <tbody id="depositors-tbody">
-                            <tr><td colspan="4" class="text-center py-6 text-slate-500">Loading...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Recent txs -->
-        <div class="card p-6">
-            <h3 class="text-lg font-semibold mb-4">Recent Bridge Transactions</h3>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="text-slate-400 text-xs uppercase border-b border-slate-800">
-                            <th class="text-left py-2 px-2">Tx Hash</th>
-                            <th class="text-left py-2 px-2">From</th>
-                            <th class="text-right py-2 px-2">Value</th>
-                            <th class="text-right py-2 px-2">Time</th>
-                        </tr>
-                    </thead>
-                    <tbody id="recent-tbody">
-                        <tr><td colspan="4" class="text-center py-6 text-slate-500">Loading...</td></tr>
-                    </tbody>
-                </table>
+        <div class="card p-6 mb-6">
+            <h3 class="text-lg font-semibold mb-4">Bridge Volume</h3>
+            <div class="relative h-64">
+                <canvas id="bridge-bar"></canvas>
             </div>
         </div>
     </div>
 
-    <!-- Cross-Chain Tab -->
     <div id="crosschain-tab" class="max-w-7xl mx-auto px-4 pb-8 hidden">
-        <!-- Cross-Chain Time Filter -->
         <div class="card p-4 mb-6">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <span class="text-sm text-slate-400">Analysis Window:</span>
-                    <select id="crosschain-time-filter" onchange="loadCrossChain()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                    <select id="crosschain-time-filter" onchange="loadCrossChain()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white">
                         <option value="0.04">1h</option>
                         <option value="0.17">4h</option>
                         <option value="0.5">12h</option>
@@ -460,180 +199,240 @@ setInterval(loadLastRefresh, 60000);
             </div>
         </div>
 
-        <!-- Summary Stats -->
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-            <div class="card p-5 glow">
-                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">Total Bridgers</p>
-                <p class="text-3xl font-bold num-mono text-blue-400" id="cc-total-bridgers">—</p>
-            </div>
-            <div class="card p-5">
-                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">NOXA Buyers</p>
-                <p class="text-3xl font-bold num-mono text-green-400" id="cc-total-buyers">—</p>
-            </div>
-            <div class="card p-5">
-                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">Overlap</p>
-                <p class="text-3xl font-bold num-mono text-purple-400" id="cc-overlap">—</p>
-            </div>
-            <div class="card p-5">
-                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">Conversion Rate</p>
-                <p class="text-3xl font-bold num-mono text-yellow-400" id="cc-conv-rate">—</p>
-            </div>
-            <div class="card p-5">
-                <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">Avg ETH (Buyers)</p>
-                <p class="text-2xl font-bold num-mono text-cyan-400" id="cc-avg-buyers">—</p>
-                <p class="text-xs text-slate-500 mt-1">vs <span id="cc-avg-non">—</span> non-buyers</p>
-            </div>
-        </div>
-
-        <!-- Conversion Funnel -->
         <div class="card p-6 mb-6">
-            <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                <span class="text-2xl">🔄</span> Conversion Funnel: Bridge Depositors → NOXA Buyers
-            </h3>
-            <div class="space-y-4">
-                <!-- Funnel bars -->
-                <div>
-                    <div class="flex items-center justify-between mb-1">
-                        <span class="text-sm text-slate-300">🌉 Bridge Depositors</span>
-                        <span class="text-sm num-mono text-blue-400 font-bold" id="funnel-bridgers">—</span>
-                    </div>
-                    <div class="h-8 rounded-lg bg-blue-900/30 border border-blue-800 overflow-hidden">
-                        <div class="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-lg flex items-center justify-end pr-3" style="width:100%">
-                            <span class="text-xs text-white font-medium">100%</span>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <div class="flex items-center justify-between mb-1">
-                        <span class="text-sm text-slate-300">🔗 Also Bought NOXA</span>
-                        <span class="text-sm num-mono text-purple-400 font-bold" id="funnel-overlap">—</span>
-                    </div>
-                    <div class="h-8 rounded-lg bg-purple-900/30 border border-purple-800 overflow-hidden">
-                        <div id="funnel-overlap-bar" class="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-lg flex items-center justify-end pr-3" style="width:0%">
-                            <span class="text-xs text-white font-medium" id="funnel-overlap-pct">0%</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <p class="text-xs text-slate-500 mt-4">Tracks how many addresses that bridged ETH to the L1 bridge contract also appear as a receiver (buyer) in NOXA token transfers.</p>
-        </div>
-
-        <!-- Bridgers × Buyers Table -->
-        <div class="card p-6">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold flex items-center gap-2">
-                    <span class="text-2xl">🎯</span> Bridgers Who Also Bought NOXA
-                </h3>
-                <span class="text-xs text-slate-500" id="cc-match-count">Loading...</span>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="text-slate-400 text-xs uppercase border-b border-slate-800">
-                            <th class="text-left py-3 px-2">#</th>
-                            <th class="text-left py-3 px-2">Address</th>
-                            <th class="text-right py-3 px-2">ETH Bridged</th>
-                            <th class="text-right py-3 px-2">NOXA Bought</th>
-                            <th class="text-right py-3 px-2">Bridge TXs</th>
-                            <th class="text-right py-3 px-2">NOXA TXs</th>
-                            <th class="text-right py-3 px-2">NOXA / ETH %</th>
-                        </tr>
-                    </thead>
-                    <tbody id="cc-matches-tbody">
-                        <tr><td colspan="7" class="text-center py-8 text-slate-500">Loading...</td></tr>
-                    </tbody>
-                </table>
-            </div>
+            <h3 class="text-lg font-semibold mb-4">Cross-Chain Summary</h3>
+            <p class="text-slate-500">Loading...</p>
         </div>
     </div>
 
-    <!-- Whale & Activity Tab -->
     <div id="whale-tab" class="max-w-7xl mx-auto px-4 pb-8 hidden">
-        <!-- Whale Alerts Feed -->
-        <div class="card p-6 mb-6">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold flex items-center gap-2">
-                    <span class="text-2xl">🐋</span> Whale Alerts
-                </h3>
-                <span class="text-xs text-slate-500" id="whale-count">Loading...</span>
-            </div>
-            <div id="whale-feed" class="space-y-2 max-h-96 overflow-y-auto">
-                <p class="text-center text-slate-500 py-4">Loading whale movements...</p>
-            </div>
-        </div>
-
-        <!-- Transfer Heatmap -->
-        <div class="card p-6 mb-6">
-            
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold flex items-center gap-2">
-                    <span class="text-2xl">🔥</span> Transfer Activity Heatmap
-                </h3>
+        <div class="card p-4 mb-6">
+            <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <select id="heatmap-time-filter" onchange="loadWhale()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                    <span class="text-sm text-slate-400">Analysis Window:</span>
+                    <select id="whale-time-filter" onchange="loadWhaleTab()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white">
                         <option value="24" selected>Last 24h</option>
                         <option value="48">Last 48h</option>
                         <option value="72">Last 72h</option>
                     </select>
                 </div>
-            </div>
-            <p class="text-xs text-slate-500 mb-4">Transfer counts by hour of day (UTC)</p>
-
-            <div id="heatmap-container" class="overflow-x-auto">
-                <p class="text-center text-slate-500 py-4">Loading heatmap...</p>
+                <span class="text-xs text-slate-500">Heatmap & Whale Alerts</span>
             </div>
         </div>
 
-        <!-- Concentration Trend -->
         <div class="card p-6 mb-6">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold flex items-center gap-2">
-                    <span class="text-2xl">📊</span> Holder Concentration Over Time
-                </h3>
-                <div class="flex items-center gap-3">
-                    <span class="text-xs text-slate-500">Trend:</span>
-                    <span id="concentration-trend" class="px-2 py-1 rounded text-xs font-medium bg-slate-700 text-slate-300">—</span>
-                </div>
-            </div>
-            <div class="relative h-72">
-                <canvas id="concentration-chart"></canvas>
+            <h3 class="text-lg font-semibold mb-4">Whale Alerts</h3>
+            <div id="whale-feed" class="space-y-2 max-h-96 overflow-y-auto">
+                <p class="text-center text-slate-500 py-4">Loading...</p>
             </div>
         </div>
 
-        <!-- Top Transfer Corridors -->
-        <div class="card p-6">
-            <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                <span class="text-2xl">🔗</span> Top Transfer Corridors
-            </h3>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="text-slate-400 text-xs uppercase border-b border-slate-800">
-                            <th class="text-left py-2 px-2">#</th>
-                            <th class="text-left py-2 px-2">From → To</th>
-                            <th class="text-right py-2 px-2">Transfers</th>
-                            <th class="text-right py-2 px-2">Volume</th>
-                        </tr>
-                    </thead>
-                    <tbody id="corridors-tbody">
-                        <tr><td colspan="4" class="text-center py-6 text-slate-500">Loading...</td></tr>
-                    </tbody>
-                </table>
+        <div class="card p-6 mb-6">
+            <h3 class="text-lg font-semibold mb-4">Transfer Heatmap</h3>
+            <div id="heatmap-container">
+                <p class="text-slate-500">Loading...</p>
             </div>
         </div>
     </div>
 
-    <footer class="text-center py-6 text-slate-600 text-xs">
-        NOXA Analytics · DBK Chain · <span id="last-update">—</span>
-    </footer>
-
 <script>
-const API = '';
-let distChart, costChart, bridgeBarChart;
-let concentrationChart;
-let bridgeChartResolution = '6H';  // default resolution
+const API = 'http://localhost:8000/api';
 
-// ─── Tab switching ───
+async function api(path) {
+    try {
+        const r = await fetch(API + path);
+        return await r.json();
+    } catch(e) { console.error('API error:', path, e); return null; }
+}
+
+function shortAddr(a) { return a ? a.slice(0,6) + '...' + a.slice(-4) : ''; }
+function fmt(n, dec=2) { return n != null ? Number(n).toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:dec}) : '—'; }
+function fmtEth(n) { return n != null ? Number(n).toFixed(4) : '—'; }
+
+async function loadSwapsFeed() {
+    const data = await api('/token/swaps?limit=50');
+    if (data && data.swaps) renderSwapsFeed(data.swaps);
+}
+
+function renderSwapsFeed(swaps) {
+    const container = document.getElementById('swaps-feed');
+    if (!container) return;
+    if (!swaps.length) {
+        container.innerHTML = '<p class="text-center text-slate-500 py-4">No swaps yet</p>';
+        return;
+    }
+    container.innerHTML = swaps.map(s => {
+        const typeEmoji = s.type === 'BUY' ? '🟢' : s.type === 'SELL' ? '🔴' : '🔄';
+        const typeClass = s.type === 'BUY' ? 'text-green-400' : s.type === 'SELL' ? 'text-red-400' : 'text-yellow-400';
+        const typeText = s.type === 'BUY' ? 'BUY' : s.type === 'SELL' ? 'SELL' : 'SWAP';
+        
+        let activityInfo = '';
+        if (s.activity_6h) {
+            if (s.activity_6h.is_accumulating) {
+                activityInfo = '<div class="text-green-400 text-xs">📈 Accumulating (6h: +' + s.activity_6h.net + ' NOXA)</div>';
+            } else if (s.activity_6h.is_distributing) {
+                activityInfo = '<div class="text-red-400 text-xs">📉 Distributing (6h: ' + s.activity_6h.net + ' NOXA)</div>';
+            } else {
+                activityInfo = '<div class="text-slate-500 text-xs">⚖️ Balanced (6h: ' + s.activity_6h.net + ' NOXA)</div>';
+            }
+        }
+        
+        return '<div class="border-b border-slate-700/50 pb-2 mb-2">' +
+            '<div class="' + typeClass + 'font-bold text-sm">' + typeEmoji + ' ' + typeText + ' ' + s.amount_str + ' $NOXA</div>' +
+            '<div class="text-xs text-slate-400 mt-1">' +
+            '<div class="grid grid-cols-2 gap-1">' +
+            '<div>💰 ' + s.price_usd_str + '</div>' +
+            '<div>💵 ' + s.usd_amount_str + '</div>' +
+            '<div>💼 ' + s.wallet_balance_str + '</div>' +
+            '<div>' + activityInfo + '</div>' +
+            '<div class="col-span-2">👤 ' + s.wallet_short + ' | 🕐 ' + s.time_utc + '</div>' +
+            '</div></div></div>';
+    }).join('');
+}
+
+async function loadLastRefresh() {
+    const data = await api('/token/last-refresh');
+    if (data) {
+        const el = document.getElementById('last-refresh');
+        if (el) {
+            const fmtTime = (ts) => { if (!ts) return '—'; const d = new Date(ts); return d.toISOString().replace('T', ' ').slice(0, 19) + ' UTC'; };
+            el.innerHTML = 'Last refresh: <strong>' + fmtTime(data.token_last_block) + '</strong>';
+        }
+    }
+}
+
+async function loadPriceChart() {
+    const data = await api('/token/price-history?limit=100');
+    if (!data || !data.history || !data.history.length) return;
+    const ctx = document.getElementById('price-chart');
+    if (!ctx) return;
+    const labels = data.history.map(d => { const ts = new Date(d.timestamp); return ts.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }); });
+    const prices = data.history.map(d => d.price);
+    if (window.priceChart) window.priceChart.destroy();
+    window.priceChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels: labels, datasets: [{ label: 'NOXA Price (USD)', data: prices, borderColor: '#6366f1', backgroundColor: 'rgba(99,102,241,0.1)', fill: true, tension: 0.4, pointRadius: 1 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: true, ticks: { color: '#64748b', font: { size: 9 }, maxTicksLimit: 10 }, grid: { color: '#1e2a3a' } }, y: { display: true, ticks: { color: '#64748b' }, grid: { color: '#1e2a3a' } } } }
+    });
+}
+
+async function loadToken() {
+    await loadLastRefresh();
+    await loadPriceChart();
+    await loadSwapsFeed();
+    const [info, dist, cb, holders] = await Promise.all([api('/token/info'), api('/token/distribution'), api('/token/cost-basis'), api('/token/holders?limit=100')]);
+    if (info) {
+        document.getElementById('t-supply').textContent = fmt(info.total_supply, 0);
+        document.getElementById('t-holders').textContent = fmt(info.holders, 0);
+        document.getElementById('t-price').textContent = info.price > 0 ? '$' + info.price : '$—';
+        document.getElementById('t-mcap').textContent = info.market_cap > 0 ? '$' + fmt(info.market_cap) : '$—';
+        document.getElementById('header-price').textContent = info.price > 0 ? '$' + info.price : '$—';
+    }
+    if (dist) renderDistChart(dist);
+    if (cb) renderCostChart(cb);
+    if (holders && holders.holders) renderHolders(holders.holders);
+}
+
+function renderDistChart(d) {
+    const ctx = document.getElementById('dist-chart');
+    if (!ctx) return;
+    if (window.distChart) window.distChart.destroy();
+    window.distChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Top 10', 'Top 100', 'Others'],
+            datasets: [{
+                data: [d.top10_pct, d.top100_pct - d.top10_pct, 100 - d.top100_pct],
+                backgroundColor: ['#6366f1', '#a855f7', '#334155']
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+    });
+}
+
+function renderCostChart(cb) {
+    const ctx = document.getElementById('cost-chart');
+    if (!ctx) return;
+    if (window.costChart) window.costChart.destroy();
+    window.costChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Below Current Price', 'At Current Price', 'Above Current Price'],
+            datasets: [{
+                label: '% Supply',
+                data: [cb.below_pct, cb.at_pct, cb.above_pct],
+                backgroundColor: ['#22c55e', '#eab308', '#ef4444']
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
+    });
+}
+
+function renderHolders(holders) {
+    const tbody = document.getElementById('holders-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = holders.map((h, i) => {
+        const pnl = h.pnl_pct;
+        const pnlClass = pnl > 0 ? 'text-green-400' : pnl < 0 ? 'text-red-400' : 'text-slate-400';
+        const pnlSign = pnl > 0 ? '+' : '';
+        return '<tr class="border-b border-slate-800">' +
+            '<td class="py-2 px-2 text-slate-400">' + (i + 1) + '</td>' +
+            '<td class="py-2 px-2 text-blue-400 font-mono">' + shortAddr(h.address) + '</td>' +
+            '<td class="py-2 px-2 text-right num-mono">' + fmt(h.balance) + '</td>' +
+            '<td class="py-2 px-2 text-right num-mono text-slate-400">' + h.pct_supply + '%</td>' +
+            '<td class="py-2 px-2 text-right num-mono">' + (h.avg_buy_price ? '$' + h.avg_buy_price : '—') + '</td>' +
+            '<td class="py-2 px-2 text-right num-mono ' + pnlClass + '">' + pnlSign + pnl + '%</td>' +
+            '</tr>';
+    }).join('');
+}
+
+async function loadBridge() {
+    const hours = document.getElementById('bridge-time-filter').value;
+    const windowLabel = hours === '0' ? 'All Time' : hours + 'h';
+    document.getElementById('bridge-window-label').textContent = 'Window: ' + windowLabel;
+    const [stats, ts] = await Promise.all([api('/bridge/stats?hours=' + hours), api('/bridge/timeseries')]);
+    if (stats) {
+        document.getElementById('b-total').textContent = fmtEth(stats.total_eth);
+        document.getElementById('b-deposits').textContent = fmt(stats.total_deposits, 0);
+        document.getElementById('b-depositors').textContent = fmt(stats.unique_depositors, 0);
+        document.getElementById('b-avg').textContent = fmtEth(stats.avg_deposit);
+    }
+    if (ts && ts.data) renderBridgeBar(ts.data);
+}
+
+function renderBridgeBar(data) {
+    const ctx = document.getElementById('bridge-bar');
+    if (!ctx || !data) return;
+    if (window.bridgeChart) window.bridgeChart.destroy();
+    window.bridgeChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: data.map(d => d.label),
+            datasets: [{ label: 'ETH', data: data.map(d => d.eth), backgroundColor: '#6366f1' }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#64748b', font: { size: 9 }, maxTicksLimit: 10 }, grid: { color: '#1e2a3a' } }, y: { ticks: { color: '#64748b' }, grid: { color: '#1e2a3a' } } } }
+    });
+}
+
+async function loadCrossChain() {
+    const days = document.getElementById('crosschain-time-filter').value;
+    const data = await api('/crosschain/summary?days=' + days);
+    console.log('Cross-chain data:', data);
+}
+
+async function loadWhaleTab() {
+    const hours = document.getElementById('whale-time-filter').value;
+    const [whale, heatmap] = await Promise.all([api('/whale/alerts?hours=' + hours), api('/token/transfer-heatmap?hours=' + hours)]);
+    if (whale && whale.alerts) {
+        document.getElementById('whale-feed').innerHTML = whale.alerts.length ? 
+            whale.alerts.map(a => '<div class="text-sm py-2 border-b border-slate-700">' + shortAddr(a.address) + ': ' + fmt(a.amount) + ' NOXA</div>').join('') :
+            '<p class="text-slate-500">No large movements in this period</p>';
+    }
+    if (heatmap) {
+        document.getElementById('heatmap-container').innerHTML = '<p class="text-slate-500">Heatmap: ' + hours + ' hours</p>';
+    }
+}
+
 function switchTab(tab) {
     document.getElementById('token-tab').classList.toggle('hidden', tab !== 'token');
     document.getElementById('bridge-tab').classList.toggle('hidden', tab !== 'bridge');
@@ -648,633 +447,25 @@ function switchTab(tab) {
     if (tab === 'whale') loadWhaleTab();
 }
 
-// ─── Helpers ───
-function shortAddr(a) { return a ? a.slice(0,6) + '...' + a.slice(-4) : ''; }
-function fmt(n, dec=2) { return n != null ? Number(n).toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:dec}) : '—'; }
-function fmtEth(n) { return n != null ? Number(n).toFixed(4) : '—'; }
-
-async function api(path) {
-    try {
-        const r = await fetch(API + path);
-        return await r.json();
-    } catch(e) { console.error('API error:', path, e); return null; }
-}
-
-async function loadPriceChart() {
-    const data = await api('/api/token/price-history?limit=100');
-    if (!data || !data.history) return;
-    
-    const ctx = document.getElementById('price-chart');
-    if (!ctx) return;
-    
-    const labels = data.history.map(d => {
-        const ts = new Date(d.timestamp);
-        return ts.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    });
-    const prices = data.history.map(d => d.price);
-    
-    if (window.priceChart) window.priceChart.destroy();
-    window.priceChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'NOXA Price (USD)',
-                data: prices,
-                borderColor: '#00ff41',
-                backgroundColor: 'rgba(0, 255, 65, 0.1)',
-                fill: true,
-                tension: 0.4,
-                pointRadius: 1,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-            },
-            scales: {
-                x: { 
-                    display: true,
-                    ticks: { color: '#00ff41', maxTicksLimit: 8 },
-                    grid: { color: '#1e2a3a' }
-                },
-                y: { 
-                    display: true,
-                    ticks: { color: '#00ff41', callback: v => '$' + v.toFixed(2) },
-                    grid: { color: '#1e2a3a' }
-                }
-            }
-        }
-    });
-}
-
-async function loadLastRefresh() {
-    const data = await api('/api/token/last-refresh');
-    if (!data) return;
-    
-    const priceTime = data.price_last_update || '—';
-    
-    let displayTime = '—';
-    if (priceTime !== '—') {
-        const ts = new Date(priceTime);
-        const now = new Date();
-        const diffMins = Math.floor((now - ts) / 60000);
-        if (diffMins < 1) displayTime = 'Just now';
-        else if (diffMins < 60) displayTime = diffMins + 'm ago';
-        else displayTime = ts.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    }
-    
-    const el = document.getElementById('last-refresh');
-    if (el) el.textContent = displayTime;
-}
-
-// ─── Token tab ───
-async function loadToken() {
-    await loadLastRefresh();
-    await loadPriceChart();
-    const [info, dist, cb, holders] = await Promise.all([
-        api('/api/token/info'),
-        api('/api/token/distribution'),
-        api('/api/token/cost-basis'),
-        api('/api/token/holders?limit=100'),
-    ]);
-
-    if (info) {
-        document.getElementById('t-supply').textContent = fmt(info.total_supply, 0);
-        document.getElementById('t-holders').textContent = fmt(info.holders, 0);
-        document.getElementById('t-price').textContent = info.price > 0 ? '$' + info.price : '$—';
-        document.getElementById('t-mcap').textContent = info.market_cap > 0 ? '$' + fmt(info.market_cap) : '$—';
-        document.getElementById('header-price').textContent = info.price > 0 ? '$' + info.price : '$—';
-    }
-
-    if (dist) renderDistChart(dist);
-    if (cb) renderCostChart(cb);
-    if (holders && holders.holders) renderHolders(holders.holders);
-}
-
-function renderDistChart(d) {
-    const ctx = document.getElementById('dist-chart');
-    if (!ctx) return;
-    const top10 = d.top10_pct || 0;
-    const top100 = (d.top100_pct || 0) - top10;
-    const rest = Math.max(0, 100 - (d.top100_pct || 0));
-
-    if (distChart) distChart.destroy();
-    distChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: [`Top 10 (${top10}%)`, `Top 11-100 (${top100}%)`, `Rest (${rest.toFixed(1)}%)`],
-            datasets: [{
-                data: [top10, top100, rest],
-                backgroundColor: ['#6366f1', '#8b5cf6', '#334155'],
-                borderWidth: 0,
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 12, font: { size: 11 } } } }
-        }
-    });
-}
-
-function renderCostChart(cb) {
-    const ctx = document.getElementById('cost-chart');
-    if (!ctx) return;
-    if (costChart) costChart.destroy();
-    costChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Below Current Price', 'Above Current Price'],
-            datasets: [{
-                data: [cb.below_pct || 100, cb.above_pct || 0],
-                backgroundColor: ['#22c55e', '#ef4444'],
-                borderWidth: 0,
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 12, font: { size: 11 } } } }
-        }
-    });
-}
-
-function renderHolders(holders) {
-    const tbody = document.getElementById('holders-tbody');
-    if (!holders.length) { tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-slate-500">No data. Click Refresh Data.</td></tr>'; return; }
-    tbody.innerHTML = holders.map((h, i) => {
-        const pnlClass = h.pnl_pct > 0 ? 'text-green-400' : h.pnl_pct < 0 ? 'text-red-400' : 'text-slate-400';
-        const pnlSign = h.pnl_pct > 0 ? '+' : '';
-        return `<tr class="border-b border-slate-800/50 hover:bg-slate-800/30">
-            <td class="py-2 px-2 text-slate-500">${i+1}</td>
-            <td class="py-2 px-2"><a href="https://scan.dbkchain.io/address/${h.address}" target="_blank" class="text-blue-400 hover:underline num-mono">${shortAddr(h.address)}</a></td>
-            <td class="py-2 px-2 text-right num-mono">${fmt(h.balance)}</td>
-            <td class="py-2 px-2 text-right num-mono text-slate-400">${h.pct_supply}%</td>
-            <td class="py-2 px-2 text-right num-mono">$${h.avg_buy_price || '—'}</td>
-            <td class="py-2 px-2 text-right num-mono ${pnlClass}">${pnlSign}${h.pnl_pct}%</td>
-        </tr>`;
-    }).join('');
-}
-
-// ─── Bridge tab ───
-async function loadBridge() {
-    const hours = document.getElementById('bridge-time-filter').value;
-    const windowLabel = hours === '0' ? 'All Time' : hours + 'h';
-    document.getElementById('bridge-window-label').textContent = 'Window: ' + windowLabel;
-    
-    const [stats, ts, dep, recent] = await Promise.all([
-        api('/api/bridge/stats?hours=' + hours),
-        api('/api/bridge/timeseries'),
-        api('/api/bridge/top-depositors?limit=20&hours=' + hours),
-        api('/api/bridge/recent?limit=20'),
-    ]);
-
-    if (stats) {
-        document.getElementById('b-total').textContent = fmtEth(stats.total_eth);
-        document.getElementById('b-deposits').textContent = fmt(stats.total_deposits, 0);
-        document.getElementById('b-depositors').textContent = fmt(stats.unique_depositors, 0);
-        document.getElementById('b-avg').textContent = fmtEth(stats.avg_deposit);
-        // Velocity cards
-        document.getElementById('b-vel-1h').textContent = fmtEth(stats.velocity_1h) + '/h';
-        document.getElementById('b-vel-6h').textContent = fmtEth(stats.velocity_6h) + '/h';
-        document.getElementById('b-vel-12h').textContent = fmtEth(stats.velocity_12h) + '/h';
-        document.getElementById('b-24h').textContent = fmtEth(stats.eth_24h);
-        document.getElementById('b-vel-7d').textContent = fmtEth(stats.velocity_7d) + '/h';
-        // Tx counts
-        document.getElementById('b-txs-1h').textContent = stats.txs_1h || 0;
-        document.getElementById('b-txs-6h').textContent = stats.txs_6h || 0;
-        document.getElementById('b-txs-12h').textContent = stats.txs_12h || 0;
-        document.getElementById('b-txs-24h').textContent = stats.txs_24h || 0;
-        document.getElementById('b-txs-7d').textContent = stats.txs_7d || 0;
-    }
-
-    if (ts && ts.data) renderBridgeBar(ts.data);
-    if (dep && dep.depositors) renderDepositors(dep.depositors);
-    if (recent && recent.transactions) renderRecent(recent.transactions);
-
-    // Also load hourly data for the chart if current resolution needs it
-    if (bridgeChartResolution !== '1D') {
-        const hoursMap = {'1H': 24, '6H': 168, '1W': 168};
-        const hours = hoursMap[bridgeChartResolution] || 168;
-        const hourlyData = await api(`/api/bridge/timeseries-hourly?hours=${hours}`);
-        if (hourlyData && hourlyData.data) renderBridgeBarHourly(hourlyData.data, bridgeChartResolution);
-    }
-}
-
-function setChartResolution(res, hours) {
-    bridgeChartResolution = res;
-    // Update button styles
-    ['1H', '6H', '1D', '1W'].forEach(r => {
-        const btn = document.getElementById('res-' + r);
-        if (r === res) {
-            btn.className = 'px-2 py-1 rounded text-xs font-medium bg-brand-600 text-white';
-        } else {
-            btn.className = 'px-2 py-1 rounded text-xs font-medium bg-slate-700 text-slate-300 hover:bg-slate-600';
-        }
-    });
-    // Reload chart
-    if (res === '1D') {
-        loadBridgeDailyChart();
-    } else {
-        loadBridgeHourlyChart(hours, res);
-    }
-}
-
-async function loadBridgeDailyChart() {
-    const ts = await api('/api/bridge/timeseries');
-    if (ts && ts.data) renderBridgeBar(ts.data);
-}
-
-async function loadBridgeHourlyChart(hours, res) {
-    const data = await api(`/api/bridge/timeseries-hourly?hours=${hours}`);
-    if (data && data.data) renderBridgeBarHourly(data.data, res);
-}
-
-function renderBridgeBarHourly(data, res) {
-    const ctx = document.getElementById('bridge-bar');
-    if (!ctx) return;
-    // For 6H/1W resolutions, aggregate hourly data into 6-hour buckets
-    let labels, volumes;
-    if (res === '1H') {
-        labels = data.map(d => d.hour.slice(11, 16));  // HH:00
-        volumes = data.map(d => d.volume);
-    } else {
-        // Aggregate into 6h buckets
-        const buckets = {};
-        const bucketOrder = [];
-        data.forEach(d => {
-            const bucketHour = Math.floor(parseInt(d.timestamp) / (6 * 3600)) * (6 * 3600);
-            if (!buckets[bucketHour]) { buckets[bucketHour] = 0; bucketOrder.push(bucketHour); }
-            buckets[bucketHour] += d.volume;
-        });
-        labels = bucketOrder.map(ts => {
-            const dt = new Date(ts * 1000);
-            return dt.toLocaleDateString('en-US', {month:'short', day:'numeric'}) + ' ' + dt.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
-        });
-        volumes = bucketOrder.map(ts => Math.round(buckets[ts] * 10000) / 10000);
-    }
-    if (bridgeBarChart) bridgeBarChart.destroy();
-    bridgeBarChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'ETH Bridged',
-                data: volumes,
-                backgroundColor: '#6366f1',
-                borderRadius: 4,
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                x: { ticks: { color: '#64748b', font: { size: 9 }, maxTicksLimit: 12 }, grid: { color: '#1e2a3a' } },
-                y: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e2a3a' } },
-            }
-        }
-    });
-}
-
-function renderBridgeBar(data) {
-    const ctx = document.getElementById('bridge-bar');
-    if (!ctx) return;
-    const last30 = data.slice(-30);
-    if (bridgeBarChart) bridgeBarChart.destroy();
-    bridgeBarChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: last30.map(d => d.date.slice(5)),
-            datasets: [{
-                label: 'ETH Bridged',
-                data: last30.map(d => d.volume),
-                backgroundColor: '#6366f1',
-                borderRadius: 4,
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                x: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e2a3a' } },
-                y: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e2a3a' } },
-            }
-        }
-    });
-}
-
-function renderDepositors(dep) {
-    const tbody = document.getElementById('depositors-tbody');
-    if (!dep.length) { tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-slate-500">No data</td></tr>'; return; }
-    tbody.innerHTML = dep.map((d, i) => `<tr class="border-b border-slate-800/50 hover:bg-slate-800/30">
-        <td class="py-2 px-2 text-slate-500">${i+1}</td>
-        <td class="py-2 px-2"><a href="https://etherscan.io/address/${d.address}" target="_blank" class="text-blue-400 hover:underline num-mono">${shortAddr(d.address)}</a></td>
-        <td class="py-2 px-2 text-right num-mono text-green-400">${fmtEth(d.total_eth)}</td>
-        <td class="py-2 px-2 text-right num-mono text-slate-400">${d.deposit_count}</td>
-    </tr>`).join('');
-}
-
-function renderRecent(txs) {
-    const tbody = document.getElementById('recent-tbody');
-    if (!txs.length) { tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-slate-500">No data</td></tr>'; return; }
-    tbody.innerHTML = txs.map(t => `<tr class="border-b border-slate-800/50 hover:bg-slate-800/30">
-        <td class="py-2 px-2"><a href="https://etherscan.io/tx/${t.hash}" target="_blank" class="text-blue-400 hover:underline num-mono">${shortAddr(t.hash)}</a></td>
-        <td class="py-2 px-2"><a href="https://etherscan.io/address/${t.from}" target="_blank" class="text-blue-400 hover:underline num-mono">${shortAddr(t.from)}</a></td>
-        <td class="py-2 px-2 text-right num-mono text-green-400">${fmtEth(t.value_eth)} ETH</td>
-        <td class="py-2 px-2 text-right num-mono text-slate-400">${t.time_ago}</td>
-    </tr>`).join('');
-}
-
-// ─── Cross-Chain Tab ───
-async function loadCrossChain() {
-    const days = document.getElementById('crosschain-time-filter').value;
-    const windowLabel = days === '0' ? 'All Time' : (days >= 1 ? days + 'd' : (days * 24) + 'h');
-    document.getElementById('cc-window-label').textContent = 'Window: ' + windowLabel;
-    
-    const [summary, bridgers] = await Promise.all([
-        api('/api/cross-chain/summary?days=' + days),
-        api('/api/cross-chain/bridgers-buyers?days=' + days),
-    ]);
-
-    if (summary) {
-        document.getElementById('cc-total-bridgers').textContent = fmt(summary.total_bridgers, 0);
-        document.getElementById('cc-total-buyers').textContent = fmt(summary.total_noxa_holders, 0);
-        document.getElementById('cc-overlap').textContent = fmt(summary.overlap_count, 0);
-        document.getElementById('cc-conv-rate').textContent = (summary.conversion_rate * 100).toFixed(1) + '%';
-        document.getElementById('cc-avg-buyers').textContent = fmtEth(summary.avg_eth_bridged_by_buyers);
-        document.getElementById('cc-avg-non').textContent = fmtEth(summary.avg_eth_bridged_by_non_buyers) + ' ETH';
-
-        // Funnel
-        document.getElementById('funnel-bridgers').textContent = fmt(summary.total_bridgers, 0);
-        document.getElementById('funnel-overlap').textContent = fmt(summary.overlap_count, 0);
-        const pct = summary.total_bridgers > 0 ? (summary.overlap_count / summary.total_bridgers * 100) : 0;
-        document.getElementById('funnel-overlap-bar').style.width = pct.toFixed(1) + '%';
-        document.getElementById('funnel-overlap-pct').textContent = pct.toFixed(1) + '%';
-    }
-
-    if (bridgers && bridgers.matches) {
-        document.getElementById('cc-match-count').textContent = `${bridgers.match_count} addresses matched`;
-        renderCrossChainMatches(bridgers.matches);
-    }
-}
-
-function renderCrossChainMatches(matches) {
-    const tbody = document.getElementById('cc-matches-tbody');
-    if (!matches.length) { tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-slate-500">No overlapping addresses found</td></tr>'; return; }
-    tbody.innerHTML = matches.map((m, i) => `<tr class="border-b border-slate-800/50 hover:bg-slate-800/30">
-        <td class="py-2 px-2 text-slate-500">${i+1}</td>
-        <td class="py-2 px-2">
-            <a href="https://etherscan.io/address/${m.address}" target="_blank" class="text-blue-400 hover:underline num-mono">${shortAddr(m.address)}</a>
-        </td>
-        <td class="py-2 px-2 text-right num-mono text-green-400">${fmtEth(m.total_eth_bridged)}</td>
-        <td class="py-2 px-2 text-right num-mono text-yellow-400">${fmt(m.total_noxa_bought)}</td>
-        <td class="py-2 px-2 text-right num-mono text-slate-400">${m.bridge_tx_count}</td>
-        <td class="py-2 px-2 text-right num-mono text-slate-400">${m.noxa_transfer_count}</td>
-        <td class="py-2 px-2 text-right num-mono text-purple-400">${m.pct_of_bridged_spent}%</td>
-    </tr>`).join('');
-}
-
-// ─── Whale & Activity Tab ───
-async function loadWhaleTab() {
-    const hours = document.getElementById('heatmap-time-filter').value;
-    
-    const [whale, heatmap, conc] = await Promise.all([
-        api('/api/whale-alerts?limit=20'),
-        api('/api/token/transfer-heatmap?hours=' + hours),
-        api('/api/token/concentration-history'),
-    ]);
-    if (whale && whale.alerts) renderWhaleFeed(whale.alerts);
-    if (heatmap) renderHeatmap(heatmap);
-    if (conc) renderConcentration(conc);
-}
-
-function renderWhaleFeed(alerts) {
-    const feed = document.getElementById('whale-feed');
-    document.getElementById('whale-count').textContent = `${alerts.length} recent whale movements`;
-    if (!alerts.length) { feed.innerHTML = '<p class="text-center text-slate-500 py-4">No whale movements detected</p>'; return; }
-
-    feed.innerHTML = alerts.map(a => {
-        const isBridge = a.type === 'bridge_deposit';
-        const icon = isBridge ? '🌉' : '🐋';
-        const typeLabel = isBridge ? 'Bridge Deposit' : 'Token Transfer';
-        const amountStr = isBridge ? `${a.amount} ETH` : `${fmt(a.amount)} NOXA`;
-        const timeStr = a.timestamp ? new Date(a.timestamp * 1000).toLocaleString('en-US', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
-        const pctStr = a.pct_supply ? ` <span class="text-slate-500">(${a.pct_supply}% supply)</span>` : '';
-        const valueStr = a.value_usd > 0 ? `<span class="text-green-400">$${fmt(a.value_usd)}</span>` : '';
-
-        return `<div class="flex items-center gap-3 p-3 rounded-lg bg-[#0f172a] border border-slate-800 hover:border-slate-600 transition-colors">
-            <span class="text-xl">${icon}</span>
-            <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2">
-                    <span class="text-xs font-medium text-slate-300">${typeLabel}</span>
-                    <span class="text-xs text-slate-600">${timeStr}</span>
-                </div>
-                <div class="text-sm num-mono truncate">
-                    <a href="https://scan.dbkchain.io/address/${a.address}" target="_blank" class="text-blue-400 hover:underline">${shortAddr(a.address)}</a>
-                    ${a.to_address ? `→ <a href="https://scan.dbkchain.io/address/${a.to_address}" target="_blank" class="text-blue-400 hover:underline">${shortAddr(a.to_address)}</a>` : ''}
-                </div>
-            </div>
-            <div class="text-right">
-                <div class="text-sm font-bold num-mono text-yellow-400">${amountStr}${pctStr}</div>
-                ${valueStr ? `<div class="text-xs num-mono">${valueStr}</div>` : ''}
-            </div>
-        </div>`;
-    }).join('');
-}
-
-function renderHeatmap(data) {
-    const container = document.getElementById('heatmap-container');
-    if (!data || !data.full_grid) { container.innerHTML = '<p class="text-center text-slate-500 py-4">No heatmap data</p>'; return; }
-
-    const counts = data.full_grid.counts;
-    const maxCount = data.max_count || 1;
-    const days = data.days;
-    const hours = data.hours;
-
-    // Build HTML table heatmap
-    let html = '<table class="w-full text-xs num-mono" style="border-collapse:separate;border-spacing:2px;">';
-    // Header row with hours
-    html += '<tr><td></td>';
-    for (let h = 0; h < 24; h++) {
-        html += `<td class="text-center text-slate-600" style="min-width:28px;padding:2px;">${h}</td>`;
-    }
-    html += '</tr>';
-
-    for (let d = 0; d < 7; d++) {
-        html += `<tr><td class="text-right text-slate-400 pr-2 font-medium">${days[d]}</td>`;
-        for (let h = 0; h < 24; h++) {
-            const count = counts[d][h];
-            if (count > 0) {
-                const intensity = Math.min(1, count / maxCount);
-                // Color from dark blue to bright cyan/yellow
-                const r = Math.round(99 + intensity * 156);
-                const g = Math.round(102 + intensity * 153);
-                const b = Math.round(241 - intensity * 141);
-                const alpha = 0.2 + intensity * 0.8;
-                const bgColor = `rgba(${r},${g},${b},${alpha})`;
-                html += `<td class="text-center rounded" style="background:${bgColor};padding:4px;color:#fff;font-size:10px;" title="${days[d]} ${h}:00 — ${count} transfers">${count}</td>`;
-            } else {
-                html += '<td class="text-center rounded" style="background:#0f172a;padding:4px;">.</td>';
-            }
-        }
-        html += '</tr>';
-    }
-    html += '</table>';
-
-    // Add legend
-    html += '<div class="flex items-center justify-end gap-2 mt-3 text-xs text-slate-500"><span>Less</span>';
-    for (let i = 0; i <= 4; i++) {
-        const intensity = i / 4;
-        const r = Math.round(99 + intensity * 156);
-        const g = Math.round(102 + intensity * 153);
-        const b = Math.round(241 - intensity * 141);
-        const alpha = 0.2 + intensity * 0.8;
-        html += `<span class="inline-block w-5 h-3 rounded" style="background:rgba(${r},${g},${b},${alpha});"></span>`;
-    }
-    html += '<span>More</span></div>';
-
-    container.innerHTML = html;
-
-    // Render corridors
-    if (data.corridors) renderCorridors(data.corridors);
-}
-
-function renderCorridors(corridors) {
-    const tbody = document.getElementById('corridors-tbody');
-    if (!corridors.length) { tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-slate-500">No corridor data</td></tr>'; return; }
-    tbody.innerHTML = corridors.map((c, i) => `<tr class="border-b border-slate-800/50 hover:bg-slate-800/30">
-        <td class="py-2 px-2 text-slate-500">${i+1}</td>
-        <td class="py-2 px-2 num-mono">
-            <a href="https://scan.dbkchain.io/address/${c.from}" target="_blank" class="text-blue-400 hover:underline">${shortAddr(c.from)}</a>
-            <span class="text-slate-500 mx-1">→</span>
-            <a href="https://scan.dbkchain.io/address/${c.to}" target="_blank" class="text-blue-400 hover:underline">${shortAddr(c.to)}</a>
-        </td>
-        <td class="py-2 px-2 text-right num-mono">${c.count}</td>
-        <td class="py-2 px-2 text-right num-mono text-green-400">${fmt(c.volume)}</td>
-    </tr>`).join('');
-}
-
-function renderConcentration(data) {
-    if (!data || !data.history || !data.history.length) return;
-
-    // Trend badge
-    const trendEl = document.getElementById('concentration-trend');
-    const trendColors = {
-        'increasing': 'bg-red-900/50 text-red-400',
-        'decreasing': 'bg-green-900/50 text-green-400',
-        'stable': 'bg-slate-700 text-slate-300',
-    };
-    const trendLabels = {
-        'increasing': '📈 More Concentrated',
-        'decreasing': '📉 Less Concentrated',
-        'stable': '➡️ Stable',
-    };
-    trendEl.className = `px-2 py-1 rounded text-xs font-medium ${trendColors[data.trend] || trendColors.stable}`;
-    trendEl.textContent = trendLabels[data.trend] || data.trend;
-
-    const ctx = document.getElementById('concentration-chart');
-    if (!ctx) return;
-    if (concentrationChart) concentrationChart.destroy();
-
-    const labels = data.history.map(h => `#${h.transfer_index}`);
-    const giniData = data.history.map(h => h.gini);
-    const top10Data = data.history.map(h => h.top10_share);
-    const top100Data = data.history.map(h => h.top100_share);
-    const holderData = data.history.map(h => h.holder_count);
-
-    concentrationChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Gini Coefficient',
-                    data: giniData,
-                    borderColor: '#6366f1',
-                    backgroundColor: 'rgba(99,102,241,0.1)',
-                    yAxisID: 'y',
-                    tension: 0.3,
-                    fill: true,
-                },
-                {
-                    label: 'Top 10 Share %',
-                    data: top10Data,
-                    borderColor: '#ef4444',
-                    backgroundColor: 'transparent',
-                    yAxisID: 'y',
-                    tension: 0.3,
-                },
-                {
-                    label: 'Top 100 Share %',
-                    data: top100Data,
-                    borderColor: '#f59e0b',
-                    backgroundColor: 'transparent',
-                    yAxisID: 'y',
-                    tension: 0.3,
-                    borderDash: [5, 3],
-                },
-                {
-                    label: 'Holders',
-                    data: holderData,
-                    borderColor: '#22c55e',
-                    backgroundColor: 'transparent',
-                    yAxisID: 'y1',
-                    tension: 0.3,
-                },
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
-            plugins: {
-                legend: { labels: { color: '#94a3b8', font: { size: 11 }, padding: 12 } },
-                tooltip: {
-                    callbacks: {
-                        title: (items) => `Transfer #${items[0].label.replace('#','')}`,
-                    }
-                }
-            },
-            scales: {
-                x: { ticks: { color: '#64748b', font: { size: 9 }, maxTicksLimit: 10 }, grid: { color: '#1e2a3a' } },
-                y: { position: 'left', title: { display: true, text: 'Gini / Share %', color: '#64748b' }, ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e2a3a' }, min: 0, max: 100 },
-                y1: { position: 'right', title: { display: true, text: 'Holders', color: '#64748b' }, ticks: { color: '#64748b', font: { size: 10 } }, grid: { drawOnChartArea: false } },
-            }
-        }
-    });
-}
-
-// ─── Actions ───
-async function setPrice() {
-    const val = document.getElementById('price-input').value;
-    if (!val) return;
-    await fetch('/api/token/price', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({price: parseFloat(val)}) });
-    loadToken();
-}
-
 async function collectAll() {
-    const btn = event?.target; if (btn) { btn.textContent = '⟳ Refreshing...'; btn.disabled = true; }
+    const btn = event?.target;
+    if (btn) { btn.textContent = '⟳ Collecting...'; btn.disabled = true; }
     try {
-        // Reload current tab's data
-        const activeTab = document.querySelector('[class*="tab-active"]');
-        if (activeTab && activeTab.id === 'tab-token') await loadToken();
-        else if (activeTab && activeTab.id === 'tab-bridge') await loadBridge();
-        else if (activeTab && activeTab.id === 'tab-crosschain') await loadCrossChain();
-        else if (activeTab && activeTab.id === 'tab-whale') await loadWhaleTab();
-        
-        await loadLastRefresh();
+        await fetch('/api/collect/token', {method:'POST'});
+        await fetch('/api/collect/bridge', {method:'POST'});
+        await loadToken();
+        await loadBridge();
+        if (!document.getElementById('whale-tab').classList.contains('hidden')) await loadWhaleTab();
     } catch(e) { console.error(e); }
     if (btn) { btn.textContent = '↻ Refresh Data'; btn.disabled = false; }
 }
 
-// ─── Init ───
 window.onload = function() {
     loadToken();
     loadLastRefresh();
-    setInterval(loadLastRefresh, 60000);  // Update refresh time every minute
+    setInterval(loadLastRefresh, 60000);
+    setInterval(loadSwapsFeed, 30000);
 };
-
 </script>
 </body>
 </html>
