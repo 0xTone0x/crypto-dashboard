@@ -660,6 +660,76 @@ async function api(path) {
     } catch(e) { console.error('API error:', path, e); return null; }
 }
 
+async function loadPriceChart() {
+    const data = await api('/api/token/price-history?limit=100');
+    if (!data || !data.history) return;
+    
+    const ctx = document.getElementById('price-chart');
+    if (!ctx) return;
+    
+    const labels = data.history.map(d => {
+        const ts = new Date(d.timestamp);
+        return ts.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    });
+    const prices = data.history.map(d => d.price);
+    
+    if (window.priceChart) window.priceChart.destroy();
+    window.priceChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'NOXA Price (USD)',
+                data: prices,
+                borderColor: '#00ff41',
+                backgroundColor: 'rgba(0, 255, 65, 0.1)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 1,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+            },
+            scales: {
+                x: { 
+                    display: true,
+                    ticks: { color: '#00ff41', maxTicksLimit: 8 },
+                    grid: { color: '#1e2a3a' }
+                },
+                y: { 
+                    display: true,
+                    ticks: { color: '#00ff41', callback: v => '$' + v.toFixed(2) },
+                    grid: { color: '#1e2a3a' }
+                }
+            }
+        }
+    });
+}
+
+async function loadLastRefresh() {
+    const data = await api('/api/token/last-refresh');
+    if (!data) return;
+    
+    const priceTime = data.price_last_update || '—';
+    
+    let displayTime = '—';
+    if (priceTime !== '—') {
+        const ts = new Date(priceTime);
+        const now = new Date();
+        const diffMins = Math.floor((now - ts) / 60000);
+        if (diffMins < 1) displayTime = 'Just now';
+        else if (diffMins < 60) displayTime = diffMins + 'm ago';
+        else displayTime = ts.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    const el = document.getElementById('last-refresh');
+    if (el) el.textContent = displayTime;
+}
+
 // ─── Token tab ───
 async function loadToken() {
     await loadLastRefresh();
