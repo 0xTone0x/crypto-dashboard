@@ -278,17 +278,20 @@ function renderSwapsFeed(swaps, minUsd) {
     }
     
     container.innerHTML = filtered.map(s => {
-        const typeEmoji = s.type === 'BUY' ? '🟢' : s.type === 'SELL' ? '🔴' : '🔄';
-        const typeClass = s.type === 'BUY' ? 'text-green-400' : s.type === 'SELL' ? 'text-red-400' : 'text-yellow-400';
-        const typeText = s.type === 'BUY' ? 'BUY' : s.type === 'SELL' ? 'SELL' : 'SWAP';
+        const typeEmoji = s.type === 'MINT' ? '🟢' : s.type === 'BURN' ? '🔴' : '🔄';
+        const typeClass = s.type === 'MINT' ? 'text-green-400' : s.type === 'BURN' ? 'text-red-400' : 'text-yellow-400';
+        const typeText = s.type === 'MINT' ? 'BUY' : s.type === 'BURN' ? 'SELL' : 'TRANSFER';
+        
+        const net6h = s.activity_6h?.net || 0;
+        const net6hStr = net6h >= 0 ? '+' + net6h.toFixed(2) : net6h.toFixed(2);
         
         let activityInfo = '';
-        if (s.activity_6h && s.activity_6h.is_accumulating) {
-            activityInfo = '<div class="text-green-400 text-xs">📈 Accumulating (6h: +' + s.activity_6h.net + ' NOXA)</div>';
-        } else if (s.activity_6h && s.activity_6h.is_distributing) {
-            activityInfo = '<div class="text-red-400 text-xs">📉 Distributing (6h: ' + s.activity_6h.net + ' NOXA)</div>';
-        } else if (s.activity_6h) {
-            activityInfo = '<div class="text-slate-500 text-xs">⚖️ Balanced (6h: ' + s.activity_6h.net + ' NOXA)</div>';
+        if (s.activity_6h?.is_accumulating) {
+            activityInfo = '<div class="text-green-400 text-xs">📈 Accumulating (6h: ' + net6hStr + ' NOXA)</div>';
+        } else if (s.activity_6h?.is_distributing) {
+            activityInfo = '<div class="text-red-400 text-xs">📉 Distributing (6h: ' + net6hStr + ' NOXA)</div>';
+        } else {
+            activityInfo = '<div class="text-slate-500 text-xs">⚖️ Balanced (6h: ' + net6hStr + ' NOXA)</div>';
         }
         
         return '<div class="border-b border-slate-700/50 pb-2 mb-2">' +
