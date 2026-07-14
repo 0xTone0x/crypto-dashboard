@@ -238,25 +238,7 @@ setInterval(loadLastRefresh, 60000);
 
     <!-- Token Tab -->
     <div id="token-tab" class="max-w-7xl mx-auto px-4 pb-8">
-        
-        <!-- Cross-Chain Time Filter -->
-        <div class="card p-4 mb-6">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <span class="text-sm text-slate-400">Analysis Window:</span>
-                    <select id="crosschain-time-filter" onchange="loadCrossChain()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
-                        <option value="0.04">1h</option>
-                        <option value="0.17">4h</option>
-                        <option value="0.5">12h</option>
-                        <option value="1" selected>24h</option>
-                        <option value="3">3d</option>
-                        <option value="0">All Time</option>
-                    </select>
-                </div>
-                <span class="text-xs text-slate-500" id="cc-window-label">Window: 24h</span>
-            </div>
-        </div>
-<!-- Overview cards -->
+        <!-- Overview cards -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div class="card p-5">
                 <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">Total Supply</p>
@@ -273,15 +255,15 @@ setInterval(loadLastRefresh, 60000);
             <div class="card p-5">
                 <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">Market Cap</p>
                 <p class="text-2xl font-bold num-mono" id="t-mcap">$—</p>
-            
+            </div>
+        </div>
+
         <!-- Price Chart -->
         <div class="card p-6 mb-6">
             <h3 class="text-lg font-semibold mb-4">NOXA Price History</h3>
             <div class="relative h-64">
                 <canvas id="price-chart"></canvas>
             </div>
-        </div>
-</div>
         </div>
 
         <!-- Charts row -->
@@ -460,6 +442,24 @@ setInterval(loadLastRefresh, 60000);
 
     <!-- Cross-Chain Tab -->
     <div id="crosschain-tab" class="max-w-7xl mx-auto px-4 pb-8 hidden">
+        <!-- Cross-Chain Time Filter -->
+        <div class="card p-4 mb-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="text-sm text-slate-400">Analysis Window:</span>
+                    <select id="crosschain-time-filter" onchange="loadCrossChain()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                        <option value="0.04">1h</option>
+                        <option value="0.17">4h</option>
+                        <option value="0.5">12h</option>
+                        <option value="1" selected>24h</option>
+                        <option value="3">3d</option>
+                        <option value="0">All Time</option>
+                    </select>
+                </div>
+                <span class="text-xs text-slate-500" id="cc-window-label">Window: 24h</span>
+            </div>
+        </div>
+
         <!-- Summary Stats -->
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
             <div class="card p-5 glow">
