@@ -81,7 +81,7 @@ setInterval(loadLastRefresh, 60000);
         <div class="card p-4 mb-6">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <span class="text-sm text-slate-400">Bridge Window:</span>
+                    <span class="text-sm text-slate-400">Analysis Window:</span>
                     <select id="crosschain-time-filter" onchange="loadCrossChain()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
                         <option value="0.04">1h</option>
                         <option value="0.17">4h</option>
@@ -1022,14 +1022,16 @@ async function setPrice() {
 }
 
 async function collectAll() {
-    const btn = event?.target; if (btn) { btn.textContent = '⟳ Collecting...'; btn.disabled = true; }
+    const btn = event?.target; if (btn) { btn.textContent = '⟳ Refreshing...'; btn.disabled = true; }
     try {
-        await fetch('/api/collect/token', {method:'POST'});
-        await fetch('/api/collect/bridge', {method:'POST'});
-        await loadToken();
-        await loadBridge();
-        if (!document.getElementById('whale-tab').classList.contains('hidden')) await loadWhaleTab();
-        document.getElementById('last-update').textContent = 'Updated ' + new Date().toLocaleTimeString();
+        // Reload current tab's data
+        const activeTab = document.querySelector('[class*="tab-active"]');
+        if (activeTab && activeTab.id === 'tab-token') await loadToken();
+        else if (activeTab && activeTab.id === 'tab-bridge') await loadBridge();
+        else if (activeTab && activeTab.id === 'tab-crosschain') await loadCrossChain();
+        else if (activeTab && activeTab.id === 'tab-whale') await loadWhaleTab();
+        
+        await loadLastRefresh();
     } catch(e) { console.error(e); }
     if (btn) { btn.textContent = '↻ Refresh Data'; btn.disabled = false; }
 }
