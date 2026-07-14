@@ -93,6 +93,8 @@ async def get_swaps_feed(limit: int = 50):
             
             swaps.append({
                 "type": swap_type,
+                "from_address": row["from_address"],
+                "to_address": row["to_address"],
                 "amount": amount,
                 "amount_str": f"{amount:,.2f}",
                 "price_eth": noxa_eth,

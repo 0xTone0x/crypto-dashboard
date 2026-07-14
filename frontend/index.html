@@ -66,7 +66,14 @@
                 <h3 class="text-lg font-semibold flex items-center gap-2">
                     <span class="text-2xl">📡</span> Live Swaps
                 </h3>
-                <span class="text-xs text-slate-500">Auto-updates every 30s</span>
+                <div class="flex items-center gap-3">
+                    <select id="swaps-usd-filter" onchange="loadSwapsFeed()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white">
+                        <option value="all" selected>All Swaps</option>
+                        <option value="100">≥$100</option>
+                        <option value="1000">≥$1,000</option>
+                    </select>
+                    <span class="text-xs text-slate-500">Auto 30s</span>
+                </div>
             </div>
             <div id="swaps-feed" class="space-y-2 max-h-80 overflow-y-auto">
                 <p class="text-center text-slate-500 py-4">Loading swaps...</p>
@@ -105,12 +112,14 @@
                 <div class="relative h-64">
                     <canvas id="dist-chart"></canvas>
                 </div>
+                <div class="text-center text-xs text-slate-500 mt-4">Top 10 / Top 100 / Others</div>
             </div>
             <div class="card p-6">
                 <h3 class="text-lg font-semibold mb-4">Cost Basis</h3>
                 <div class="relative h-64">
                     <canvas id="cost-chart"></canvas>
                 </div>
+                <div class="text-center text-xs text-slate-500 mt-4">% of supply vs current price</div>
             </div>
         </div>
 
@@ -250,31 +259,36 @@ function fmt(n, dec=2) { return n != null ? Number(n).toLocaleString('en-US', {m
 function fmtEth(n) { return n != null ? Number(n).toFixed(4) : '—'; }
 
 async function loadSwapsFeed() {
-    const data = await api('/token/swaps?limit=50');
-    if (data && data.swaps) renderSwapsFeed(data.swaps);
+    const minUsd = document.getElementById('swaps-usd-filter')?.value || 'all';
+    const data = await api('/token/swaps?limit=100');
+    if (data && data.swaps) renderSwapsFeed(data.swaps, minUsd);
 }
 
-function renderSwapsFeed(swaps) {
+function renderSwapsFeed(swaps, minUsd) {
     const container = document.getElementById('swaps-feed');
     if (!container) return;
-    if (!swaps.length) {
-        container.innerHTML = '<p class="text-center text-slate-500 py-4">No swaps yet</p>';
+    
+    let filtered = swaps;
+    if (minUsd === '100') filtered = swaps.filter(s => s.usd_amount >= 100);
+    else if (minUsd === '1000') filtered = swaps.filter(s => s.usd_amount >= 1000);
+    
+    if (!filtered.length) {
+        container.innerHTML = '<p class="text-center text-slate-500 py-4">No swaps match filter</p>';
         return;
     }
-    container.innerHTML = swaps.map(s => {
+    
+    container.innerHTML = filtered.map(s => {
         const typeEmoji = s.type === 'BUY' ? '🟢' : s.type === 'SELL' ? '🔴' : '🔄';
         const typeClass = s.type === 'BUY' ? 'text-green-400' : s.type === 'SELL' ? 'text-red-400' : 'text-yellow-400';
         const typeText = s.type === 'BUY' ? 'BUY' : s.type === 'SELL' ? 'SELL' : 'SWAP';
         
         let activityInfo = '';
-        if (s.activity_6h) {
-            if (s.activity_6h.is_accumulating) {
-                activityInfo = '<div class="text-green-400 text-xs">📈 Accumulating (6h: +' + s.activity_6h.net + ' NOXA)</div>';
-            } else if (s.activity_6h.is_distributing) {
-                activityInfo = '<div class="text-red-400 text-xs">📉 Distributing (6h: ' + s.activity_6h.net + ' NOXA)</div>';
-            } else {
-                activityInfo = '<div class="text-slate-500 text-xs">⚖️ Balanced (6h: ' + s.activity_6h.net + ' NOXA)</div>';
-            }
+        if (s.activity_6h && s.activity_6h.is_accumulating) {
+            activityInfo = '<div class="text-green-400 text-xs">📈 Accumulating (6h: +' + s.activity_6h.net + ' NOXA)</div>';
+        } else if (s.activity_6h && s.activity_6h.is_distributing) {
+            activityInfo = '<div class="text-red-400 text-xs">📉 Distributing (6h: ' + s.activity_6h.net + ' NOXA)</div>';
+        } else if (s.activity_6h) {
+            activityInfo = '<div class="text-slate-500 text-xs">⚖️ Balanced (6h: ' + s.activity_6h.net + ' NOXA)</div>';
         }
         
         return '<div class="border-b border-slate-700/50 pb-2 mb-2">' +
@@ -295,8 +309,13 @@ async function loadLastRefresh() {
     if (data) {
         const el = document.getElementById('last-refresh');
         if (el) {
-            const fmtTime = (ts) => { if (!ts) return '—'; const d = new Date(ts); return d.toISOString().replace('T', ' ').slice(0, 19) + ' UTC'; };
-            el.innerHTML = 'Last refresh: <strong>' + fmtTime(data.token_last_block) + '</strong>';
+            const fmtTime = (ts) => {
+                if (!ts || ts.toString().startsWith('1970')) return 'Never';
+                const d = new Date(ts);
+                if (isNaN(d.getTime())) return 'Invalid';
+                return d.toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
+            };
+            el.innerHTML = 'Last refresh: <strong>' + fmtTime(data.token_last_block || data.price_last_update) + '</strong>';
         }
     }
 }
@@ -337,16 +356,34 @@ function renderDistChart(d) {
     const ctx = document.getElementById('dist-chart');
     if (!ctx) return;
     if (window.distChart) window.distChart.destroy();
+    const top10 = d.top10_pct || 0;
+    const top100 = d.top100_pct || 0;
+    const others = Math.max(0, 100 - top100);
     window.distChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: ['Top 10', 'Top 100', 'Others'],
+            labels: ['Top 10', 'Top 11-100', 'Others'],
             datasets: [{
-                data: [d.top10_pct, d.top100_pct - d.top10_pct, 100 - d.top100_pct],
-                backgroundColor: ['#6366f1', '#a855f7', '#334155']
+                data: [top10, top100 - top10, others],
+                backgroundColor: ['#6366f1', '#a855f7', '#334155'],
+                borderWidth: 2,
+                borderColor: '#131826'
             }]
         },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { 
+                legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 15 } },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': ' + context.parsed.toFixed(2) + '%';
+                        }
+                    }
+                }
+            }
+        }
     });
 }
 
@@ -354,17 +391,47 @@ function renderCostChart(cb) {
     const ctx = document.getElementById('cost-chart');
     if (!ctx) return;
     if (window.costChart) window.costChart.destroy();
+    const below = cb.below_pct || 0;
+    const at = cb.at_pct || 0;
+    const above = cb.above_pct || 0;
     window.costChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ['Below Current Price', 'At Current Price', 'Above Current Price'],
+            labels: ['Below Price', 'At Price', 'Above Price'],
             datasets: [{
-                label: '% Supply',
-                data: [cb.below_pct, cb.at_pct, cb.above_pct],
-                backgroundColor: ['#22c55e', '#eab308', '#ef4444']
+                label: '% of Supply',
+                data: [below, at, above],
+                backgroundColor: ['#22c55e', '#eab308', '#ef4444'],
+                borderWidth: 1,
+                borderColor: '#131826'
             }]
         },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { 
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.y.toFixed(2) + '% of supply';
+                        }
+                    }
+                }
+            },
+            scales: { 
+                y: { 
+                    beginAtZero: true, 
+                    max: 100,
+                    ticks: { color: '#64748b' },
+                    grid: { color: '#1e2a3a' }
+                },
+                x: {
+                    ticks: { color: '#64748b' },
+                    grid: { display: false }
+                }
+            }
+        }
     });
 }
 
@@ -416,7 +483,7 @@ function renderBridgeBar(data) {
 
 async function loadCrossChain() {
     const days = document.getElementById('crosschain-time-filter').value;
-    const data = await api('/crosschain/summary?days=' + days);
+    const data = await api('/cross-chain/summary?days=' + days);
     console.log('Cross-chain data:', data);
 }
 
